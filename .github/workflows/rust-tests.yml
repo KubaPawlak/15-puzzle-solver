@@ -38,7 +38,6 @@ jobs:
           -D clippy::swap_ptr_to_ref
           -D clippy::drop_non_drop
           -D clippy::empty_loop
-          -D clippy::iter_out_of_bounds
           -D clippy::lines_filter_map_ok
           -D clippy::multi_assignments
           -D clippy::boxed_local
@@ -114,7 +113,6 @@ jobs:
           -D clippy::redundant_closure
           -D clippy::redundant_field_names
           -D clippy::unnecessary_fold
-          -D clippy::unnecessary_fallible_conversions
           -D clippy::trim_split_whitespace
           -D clippy::unused_unit
           -D clippy::while_let_on_iterator
