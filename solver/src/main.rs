@@ -1,2 +1,3 @@
-fn main() {
-}
+mod board;
+
+fn main() {}
