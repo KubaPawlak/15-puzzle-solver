@@ -2,7 +2,6 @@ use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::num::ParseIntError;
-use std::ops::{Index, IndexMut};
 use std::str::FromStr;
 
 pub(crate) struct Board {
@@ -27,6 +26,12 @@ impl Board {
 
     pub fn at(&self, row: u8, column: u8) -> u8 {
         self.cells[self.flatten_index(row, column)]
+    }
+
+    pub fn is_solved(&self) -> bool {
+        self.cells[..self.cells.len() - 1]
+            .windows(2)
+            .all(|w| w[0] <= w[1])
     }
 
     /// Convert 2D representation of cell coordinate to a single index in the underlying vec
@@ -152,15 +157,16 @@ impl Error for BoardCreationError {
 mod tests {
     use super::*;
 
-    #[test]
-    fn board_correctly_parsed() {
-        let input = r"4 4
+    static SOLVED_INPUT: &str = r"4 4
 1  2  3  4
 5  6  7  8
 9 10 11 12
 13 14 15 0
 ";
-        let board: Board = input.parse().unwrap();
+
+    #[test]
+    fn board_correctly_parsed() {
+        let board: Board = SOLVED_INPUT.parse().unwrap();
 
         assert_eq!(board.dimensions(), (4, 4));
 
@@ -180,5 +186,12 @@ mod tests {
         assert_eq!(board.at(3, 1), 14);
         assert_eq!(board.at(3, 2), 15);
         assert_eq!(board.at(3, 3), 0);
+    }
+
+    #[test]
+    fn solved_board_shows_as_solved() {
+        let solved_board: Board = SOLVED_INPUT.parse().unwrap();
+
+        assert!(solved_board.is_solved())
     }
 }
