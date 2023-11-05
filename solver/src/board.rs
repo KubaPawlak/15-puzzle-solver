@@ -2,12 +2,37 @@ use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::num::ParseIntError;
+use std::ops::{Index, IndexMut};
 use std::str::FromStr;
 
 pub(crate) struct Board {
     rows: u8,
     columns: u8,
     cells: Vec<u8>,
+}
+
+impl Board {
+    /// Returns number of rows and columns
+    pub fn dimensions(&self) -> (u8, u8) {
+        (self.rows, self.columns)
+    }
+
+    pub fn rows(&self) -> Vec<&[u8]> {
+        self.cells.chunks(self.columns as usize).collect()
+    }
+
+    pub fn rows_mut(&mut self) -> Vec<&mut [u8]> {
+        self.cells.chunks_mut(self.columns as usize).collect()
+    }
+
+    pub fn at(&self, row: u8, column: u8) -> u8 {
+        self.cells[self.flatten_index(row, column)]
+    }
+
+    /// Convert 2D representation of cell coordinate to a single index in the underlying vec
+    fn flatten_index(&self, row: u8, column: u8) -> usize {
+        row as usize * self.rows as usize + column as usize
+    }
 }
 
 impl FromStr for Board {
