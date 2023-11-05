@@ -60,7 +60,7 @@ impl FromStr for Board {
             (parsed[0], parsed[1])
         };
 
-        let mut cells = Vec::<u8>::with_capacity(rows as usize * columns as usize);
+        let mut cells = vec![0u8; rows as usize * columns as usize];
 
         let mut row_count: usize = 0;
         for (board_row, input_line) in cells
@@ -145,5 +145,40 @@ impl Error for BoardCreationError {
             BoardCreationError::ParsingError(err) => Some(err),
             _ => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn board_correctly_parsed() {
+        let input = r"4 4
+1  2  3  4
+5  6  7  8
+9 10 11 12
+13 14 15 0
+";
+        let board: Board = input.parse().unwrap();
+
+        assert_eq!(board.dimensions(), (4, 4));
+
+        assert_eq!(board.at(0, 0), 1);
+        assert_eq!(board.at(0, 1), 2);
+        assert_eq!(board.at(0, 2), 3);
+        assert_eq!(board.at(0, 3), 4);
+        assert_eq!(board.at(1, 0), 5);
+        assert_eq!(board.at(1, 1), 6);
+        assert_eq!(board.at(1, 2), 7);
+        assert_eq!(board.at(1, 3), 8);
+        assert_eq!(board.at(2, 0), 9);
+        assert_eq!(board.at(2, 1), 10);
+        assert_eq!(board.at(2, 2), 11);
+        assert_eq!(board.at(2, 3), 12);
+        assert_eq!(board.at(3, 0), 13);
+        assert_eq!(board.at(3, 1), 14);
+        assert_eq!(board.at(3, 2), 15);
+        assert_eq!(board.at(3, 3), 0);
     }
 }
