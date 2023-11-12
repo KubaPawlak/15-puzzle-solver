@@ -1,9 +1,10 @@
-use super::Board;
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::FromStr;
+
+use super::Board;
 
 impl FromStr for Board {
     type Err = BoardCreationError;
