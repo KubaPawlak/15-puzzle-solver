@@ -4,9 +4,9 @@ use std::fmt::{Debug, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-use super::Board;
+use super::OwnedBoard;
 
-impl FromStr for Board {
+impl FromStr for OwnedBoard {
     type Err = BoardCreationError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn board_correctly_parsed() {
-        let board: Board = SOLVED_INPUT.parse().unwrap();
+        let board: OwnedBoard = SOLVED_INPUT.parse().unwrap();
 
         assert_eq!(board.dimensions(), (4, 4));
 

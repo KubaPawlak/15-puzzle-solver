@@ -1,13 +1,13 @@
 pub mod parsing;
 
 #[derive(Clone)]
-pub(crate) struct Board {
+pub(crate) struct OwnedBoard {
     rows: u8,
     columns: u8,
     cells: Vec<u8>,
 }
 
-impl Board {
+impl OwnedBoard {
     /// Returns number of rows and columns
     pub fn dimensions(&self) -> (u8, u8) {
         (self.rows, self.columns)
@@ -44,8 +44,8 @@ mod tests {
 
     use super::*;
 
-    fn create_solved_board() -> Board {
-        Board {
+    fn create_solved_board() -> OwnedBoard {
+        OwnedBoard {
             rows: 4,
             columns: 4,
             cells: (1..=15).chain(once(0)).collect(),
