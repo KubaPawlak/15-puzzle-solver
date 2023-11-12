@@ -73,6 +73,7 @@ impl FromStr for Board {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum BoardCreationError {
     ParsingError(ParseIntError),
     InvalidHeader,
@@ -101,12 +102,6 @@ impl Display for BoardCreationError {
             }
             BoardCreationError::InvalidHeader => write!(f, "The size header is invalid or missing"),
         }
-    }
-}
-
-impl Debug for BoardCreationError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        <BoardCreationError as Display>::fmt(self, f)
     }
 }
 

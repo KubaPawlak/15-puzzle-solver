@@ -1,5 +1,6 @@
-mod parsing;
+pub mod parsing;
 
+#[derive(Clone)]
 pub(crate) struct Board {
     rows: u8,
     columns: u8,
@@ -12,11 +13,11 @@ impl Board {
         (self.rows, self.columns)
     }
 
-    pub fn rows(&self) -> impl Iterator<Item=&[u8]> {
+    pub fn rows(&self) -> impl Iterator<Item = &[u8]> {
         self.cells.chunks(self.columns as usize)
     }
 
-    pub fn rows_mut(&mut self) -> impl Iterator<Item=&mut [u8]> {
+    pub fn rows_mut(&mut self) -> impl Iterator<Item = &mut [u8]> {
         self.cells.chunks_mut(self.columns as usize)
     }
 
@@ -25,7 +26,10 @@ impl Board {
     }
 
     pub fn is_solved(&self) -> bool {
-        self.cells[..self.cells.len() - 1].windows(2).all(|w| w[0] <= w[1]) && self.cells[self.cells.len() - 1] == 0
+        self.cells[..self.cells.len() - 1]
+            .windows(2)
+            .all(|w| w[0] <= w[1])
+            && self.cells[self.cells.len() - 1] == 0
     }
 
     /// Convert 2D representation of cell coordinate to a single index in the underlying vec
@@ -65,6 +69,9 @@ mod tests {
         assert_eq!(solved_rows.next().unwrap(), &[9, 10, 11, 12]);
         assert_eq!(solved_rows.next().unwrap(), &[13, 14, 15, 0]);
 
-        assert_eq!(solved_board.dimensions().0 as usize, solved_board.rows().count());
+        assert_eq!(
+            solved_board.dimensions().0 as usize,
+            solved_board.rows().count()
+        );
     }
 }
