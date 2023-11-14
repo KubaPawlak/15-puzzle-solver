@@ -1,5 +1,29 @@
 pub mod parsing;
 
+#[repr(u8)]
+pub enum BoardMove {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+
+pub trait Board {
+    /// Returns number of rows and columns
+    fn dimensions(&self) -> (u8, u8);
+    fn at(&self, row: u8, column: u8) -> u8;
+    fn is_solved(&self) -> bool;
+
+    /// Checks if a given move can be performed on the board
+    fn can_move(&self, board_move: BoardMove) -> bool;
+
+    /// # Panics
+    /// This function may panic if the move cannot be performed.
+    /// To avoid it, check before if a move can be executed using [can_move](Board::can_move)
+    fn exec_move(&mut self, board_move: BoardMove);
+}
+
 #[derive(Clone)]
 pub(crate) struct OwnedBoard {
     rows: u8,
@@ -8,12 +32,7 @@ pub(crate) struct OwnedBoard {
 }
 
 impl OwnedBoard {
-    /// Returns number of rows and columns
-    pub fn dimensions(&self) -> (u8, u8) {
-        (self.rows, self.columns)
-    }
-
-    pub fn rows(&self) -> impl Iterator<Item = &[u8]> {
+    fn rows(&self) -> impl Iterator<Item=&[u8]> {
         self.cells.chunks(self.columns as usize)
     }
 
@@ -21,20 +40,32 @@ impl OwnedBoard {
         self.cells.chunks_mut(self.columns as usize)
     }
 
-    pub fn at(&self, row: u8, column: u8) -> u8 {
+    /// Convert 2D representation of cell coordinate to a single index in the underlying vec
+    fn flatten_index(&self, row: u8, column: u8) -> usize {
+        row as usize * self.rows as usize + column as usize
+    }
+}
+
+impl Board for OwnedBoard {
+    fn dimensions(&self) -> (u8, u8) {
+        (self.rows, self.columns)
+    }
+    fn at(&self, row: u8, column: u8) -> u8 {
         self.cells[self.flatten_index(row, column)]
     }
-
-    pub fn is_solved(&self) -> bool {
+    fn is_solved(&self) -> bool {
         self.cells[..self.cells.len() - 1]
             .windows(2)
             .all(|w| w[0] <= w[1])
             && self.cells[self.cells.len() - 1] == 0
     }
 
-    /// Convert 2D representation of cell coordinate to a single index in the underlying vec
-    fn flatten_index(&self, row: u8, column: u8) -> usize {
-        row as usize * self.rows as usize + column as usize
+    fn can_move(&self, board_move: BoardMove) -> bool {
+        todo!()
+    }
+
+    fn exec_move(&mut self, board_move: BoardMove) {
+        todo!()
     }
 }
 

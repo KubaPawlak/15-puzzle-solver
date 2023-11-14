@@ -116,6 +116,7 @@ impl Error for BoardCreationError {
 
 #[cfg(test)]
 mod tests {
+    use crate::board::Board;
     use super::*;
 
     const SOLVED_INPUT: &str = r"4 4
