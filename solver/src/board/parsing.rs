@@ -4,7 +4,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-use super::OwnedBoard;
+use crate::board::owned::OwnedBoard;
 
 impl FromStr for OwnedBoard {
     type Err = BoardCreationError;
@@ -74,7 +74,7 @@ impl FromStr for OwnedBoard {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum BoardCreationError {
+pub enum BoardCreationError {
     ParsingError(ParseIntError),
     InvalidHeader,
     MissingCells,
@@ -117,6 +117,7 @@ impl Error for BoardCreationError {
 #[cfg(test)]
 mod tests {
     use crate::board::Board;
+
     use super::*;
 
     const SOLVED_INPUT: &str = r"4 4
