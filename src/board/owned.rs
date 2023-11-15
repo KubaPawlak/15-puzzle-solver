@@ -29,11 +29,19 @@ impl Board for OwnedBoard {
     fn at(&self, row: u8, column: u8) -> u8 {
         self.cells[self.flatten_index(row, column)]
     }
+
     fn is_solved(&self) -> bool {
-        self.cells[..self.cells.len() - 1]
-            .windows(2)
-            .all(|w| w[0] <= w[1])
-            && self.cells[self.cells.len() - 1] == 0
+        // first check if the empty square is at the last position,
+        // as in most cases that will not be the case,
+        // thus eliminating the need for checking any other squares
+        self.cells.last().copied().expect("cells cannot be empty") == 0
+            // else we check all other squares and verify that they are in order
+            && self
+                .cells
+                .iter()
+                .copied()
+                .zip(1..self.cells.len())
+                .all(|(actual, expected)| actual == expected as u8)
     }
 
     fn can_move(&self, board_move: BoardMove) -> bool {
@@ -49,8 +57,8 @@ impl Board for OwnedBoard {
 mod tests {
     use std::iter::once;
 
-    use crate::board::owned::OwnedBoard;
     use crate::board::*;
+    use crate::board::owned::OwnedBoard;
 
     fn create_solved_board() -> OwnedBoard {
         OwnedBoard {
