@@ -1,4 +1,4 @@
 mod board;
-mod parity;
+mod solving;
 
 fn main() {}
