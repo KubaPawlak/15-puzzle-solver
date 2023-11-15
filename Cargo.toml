@@ -1,3 +1,11 @@
-[workspace]
-members = ["solver"]
-resolver = "2"
+[package]
+name = "solver"
+authors = ["Jakub Pawlak <234767@edu.p.lodz.pl>", "Juliusz Szymajda <234769@edu.p.lodz.pl>"]
+description = "CLI Application for solving 15-puzzle using different algorithms"
+repository = "https://github.com/KubaPawlak/15-puzzle-solver"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
