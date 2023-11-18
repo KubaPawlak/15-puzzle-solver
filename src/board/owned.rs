@@ -57,8 +57,8 @@ impl Board for OwnedBoard {
 mod tests {
     use std::iter::once;
 
-    use crate::board::*;
     use crate::board::owned::OwnedBoard;
+    use crate::board::*;
 
     fn create_solved_board() -> OwnedBoard {
         OwnedBoard {

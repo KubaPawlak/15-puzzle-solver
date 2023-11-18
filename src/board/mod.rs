@@ -18,14 +18,13 @@ pub enum BoardMove {
 impl Display for BoardMove {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            BoardMove::Up => write!(f,"U"),
-            BoardMove::Down => write!(f,"D"),
-            BoardMove::Left => write!(f,"L"),
-            BoardMove::Right => write!(f,"R"),
+            BoardMove::Up => write!(f, "U"),
+            BoardMove::Down => write!(f, "D"),
+            BoardMove::Left => write!(f, "L"),
+            BoardMove::Right => write!(f, "R"),
         }
     }
 }
-
 
 pub trait Board {
     /// Returns number of rows and columns
