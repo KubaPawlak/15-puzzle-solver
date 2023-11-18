@@ -42,3 +42,20 @@ where
         Parity::Odd
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn odd_permutation_has_odd_parity() {
+        let odd_permutation = [2u8, 3, 4, 1, 0];
+        assert_eq!(Parity::Odd, calculate_parity(&odd_permutation));
+    }
+
+    #[test]
+    fn even_permutation_has_even_parity() {
+        let even_permutation = [0u8, 1, 4, 2, 3];
+        assert_eq!(Parity::Even, calculate_parity(&even_permutation));
+    }
+}
