@@ -1,3 +1,5 @@
+use crate::board::Board;
+
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
 pub enum Parity {
     Even,
@@ -43,8 +45,22 @@ where
     }
 }
 
+pub fn solved_board_parity(board: &impl Board) -> Parity {
+    let (rows, cols) = board.dimensions();
+    let total_cells = rows * cols;
+
+    // solved board is one big cycle, so parity is opposite its size
+    if total_cells % 2 == 0 {
+        Parity::Odd
+    } else {
+        Parity::Even
+    }
+}
+
 #[cfg(test)]
 mod test {
+    use std::iter::once;
+
     use super::*;
 
     #[test]
@@ -57,5 +73,19 @@ mod test {
     fn even_permutation_has_even_parity() {
         let even_permutation = [0u8, 1, 4, 2, 3];
         assert_eq!(Parity::Even, calculate_parity(&even_permutation));
+    }
+
+    #[test]
+    fn solved_board_has_inverse_parity_to_its_size() {
+        let board_size = 16;
+        let board_cells: Vec<u8> = (1..board_size).chain(once(0)).collect();
+
+        let inverse_parity = if board_size % 2 == 0 {
+            Parity::Odd
+        } else {
+            Parity::Even
+        };
+
+        assert_eq!(inverse_parity, calculate_parity(&board_cells));
     }
 }
