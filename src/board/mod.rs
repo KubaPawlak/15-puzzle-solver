@@ -29,7 +29,12 @@ impl Display for BoardMove {
 pub trait Board {
     /// Returns number of rows and columns
     fn dimensions(&self) -> (u8, u8);
+
     fn at(&self, row: u8, column: u8) -> u8;
+
+    /// Returns the row and column index of the empty cell
+    fn empty_cell_pos(&self) -> (u8, u8);
+
     fn is_solved(&self) -> bool;
 
     /// Checks if a given move can be performed on the board

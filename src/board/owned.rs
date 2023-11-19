@@ -30,6 +30,19 @@ impl Board for OwnedBoard {
         self.cells[self.flatten_index(row, column)]
     }
 
+    fn empty_cell_pos(&self) -> (u8, u8) {
+        let empty_cell_index = self
+            .cells
+            .iter()
+            .position(|c| *c == 0)
+            .expect("Cell vector does not contain empty cell");
+
+        let row = empty_cell_index / self.columns as usize;
+        let column = empty_cell_index % self.columns as usize;
+
+        (row as u8, column as u8)
+    }
+
     fn is_solved(&self) -> bool {
         // first check if the empty square is at the last position,
         // as in most cases that will not be the case,
