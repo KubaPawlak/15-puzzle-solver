@@ -8,14 +8,6 @@ pub struct OwnedBoard {
 }
 
 impl OwnedBoard {
-    pub fn rows(&self) -> impl Iterator<Item = &[u8]> {
-        self.cells.chunks(self.columns as usize)
-    }
-
-    pub fn rows_mut(&mut self) -> impl Iterator<Item = &mut [u8]> {
-        self.cells.chunks_mut(self.columns as usize)
-    }
-
     /// Convert 2D representation of cell coordinate to a single index in the underlying vec
     fn flatten_index(&self, row: u8, column: u8) -> usize {
         row as usize * self.rows as usize + column as usize
@@ -86,21 +78,5 @@ mod tests {
         let solved_board = &create_solved_board();
 
         assert!(solved_board.is_solved());
-    }
-
-    #[test]
-    fn rows_yields_correct_structure() {
-        let solved_board = create_solved_board();
-        let mut solved_rows = solved_board.rows();
-
-        assert_eq!(solved_rows.next().unwrap(), &[1, 2, 3, 4]);
-        assert_eq!(solved_rows.next().unwrap(), &[5, 6, 7, 8]);
-        assert_eq!(solved_rows.next().unwrap(), &[9, 10, 11, 12]);
-        assert_eq!(solved_rows.next().unwrap(), &[13, 14, 15, 0]);
-
-        assert_eq!(
-            solved_board.dimensions().0 as usize,
-            solved_board.rows().count()
-        );
     }
 }
