@@ -1,9 +1,30 @@
+use std::ops::Rem;
+
 use crate::board::Board;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
 pub enum Parity {
     Even,
     Odd,
+}
+
+impl Parity {
+    pub fn opposite(&self) -> Parity {
+        match self {
+            Parity::Even => Parity::Odd,
+            Parity::Odd => Parity::Even,
+        }
+    }
+}
+
+impl From<usize> for Parity {
+    fn from(value: usize) -> Self {
+        if value % 2 == 0 {
+            Parity::Even
+        } else {
+            Parity::Odd
+        }
+    }
 }
 
 pub fn calculate_parity<T>(permutation: &[T]) -> Parity
@@ -37,12 +58,7 @@ where
         .filter(|len| len % 2 == 0) // cycle is odd if its length is even
         .count();
 
-    if odd_cycle_count % 2 == 0 {
-        // if there is an even number of odd cycles, they cancel out and the resulting parity is even
-        Parity::Even
-    } else {
-        Parity::Odd
-    }
+    Parity::from(odd_cycle_count) // parity the same as number of odd cycles
 }
 
 pub fn solved_board_parity(board: &impl Board) -> Parity {
@@ -50,11 +66,7 @@ pub fn solved_board_parity(board: &impl Board) -> Parity {
     let total_cells = rows * cols;
 
     // solved board is one big cycle, so parity is opposite its size
-    if total_cells % 2 == 0 {
-        Parity::Odd
-    } else {
-        Parity::Even
-    }
+    Parity::from(total_cells as usize).opposite()
 }
 
 #[cfg(test)]
@@ -78,13 +90,9 @@ mod test {
     #[test]
     fn solved_board_has_inverse_parity_to_its_size() {
         let board_size = 16;
-        let board_cells: Vec<u8> = (1..board_size).chain(once(0)).collect();
+        let board_cells: Vec<u8> = (1..board_size as u8).chain(once(0)).collect();
 
-        let inverse_parity = if board_size % 2 == 0 {
-            Parity::Odd
-        } else {
-            Parity::Even
-        };
+        let inverse_parity = Parity::from(board_size).opposite();
 
         assert_eq!(inverse_parity, calculate_parity(&board_cells));
     }
