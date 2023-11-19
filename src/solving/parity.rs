@@ -1,4 +1,4 @@
-use std::ops::Rem;
+use std::ops::Add;
 
 use crate::board::Board;
 
@@ -9,7 +9,7 @@ pub enum Parity {
 }
 
 impl Parity {
-    pub fn opposite(&self) -> Parity {
+    fn opposite(&self) -> Parity {
         match self {
             Parity::Even => Parity::Odd,
             Parity::Odd => Parity::Even,
@@ -27,11 +27,20 @@ impl From<usize> for Parity {
     }
 }
 
-pub fn calculate_parity<T>(permutation: &[T]) -> Parity
-where
-    T: Copy,
-    usize: From<T>,
-{
+impl Add for Parity {
+    type Output = Parity;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        use Parity::*;
+
+        match (self, rhs) {
+            (Even, Even) | (Odd, Odd) => Even,
+            (_, _) => Odd,
+        }
+    }
+}
+
+pub fn calculate_parity<T: Into<usize> + Copy>(permutation: &[T]) -> Parity {
     let mut visited = bit_set::BitSet::with_capacity(permutation.len());
     let mut cycle_lengths = vec![];
 
@@ -52,21 +61,18 @@ where
         }
     }
 
-    let odd_cycle_count = cycle_lengths
+    cycle_lengths
         .into_iter()
-        // we skip even cycles as they do not change the parity
-        .filter(|len| len % 2 == 0) // cycle is odd if its length is even
-        .count();
-
-    Parity::from(odd_cycle_count) // parity the same as number of odd cycles
+        .map(|len| Parity::from(len).opposite()) // parity of a cycle is opposite of the parity of its length
+        .fold(Parity::Even, Parity::add)
 }
 
 pub fn solved_board_parity(board: &impl Board) -> Parity {
     let (rows, cols) = board.dimensions();
-    let total_cells = rows * cols;
+    let total_cells = rows as usize * cols as usize;
 
     // solved board is one big cycle, so parity is opposite its size
-    Parity::from(total_cells as usize).opposite()
+    Parity::from(total_cells).opposite()
 }
 
 #[cfg(test)]
