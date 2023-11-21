@@ -34,7 +34,7 @@ pub fn generate_pairs_of_moves(previous_pair: Option<(BoardMove, BoardMove)>) ->
         for &second_move in &moves {
             // Avoid obviously unsound moves
             if !is_opposite_move(first_move, second_move) {
-                if let Some((prev_first, prev_second)) = previous_pair {
+                if let Some((_prev_first, prev_second)) = previous_pair {
                     //Avoid rewinding previous move
                     if !is_opposite_move(first_move, prev_second) {
                         pairs.push((first_move, second_move));
