@@ -7,29 +7,34 @@ pub struct SubBoard<'a> {
     columns: u8,
     translation_offset: u8,
 }
-    impl<'a> SubBoard<'a> {
-        pub fn new_sub_board(original_board: &'a mut dyn Board, translation_offset: u8, rows: u8, columns: u8) -> Self {
+impl<'a> SubBoard<'a> {
+    pub fn new_sub_board(
+        original_board: &'a mut dyn Board,
+        translation_offset: u8,
+        rows: u8,
+        columns: u8,
+    ) -> Self {
+        let empty_pos = original_board.empty_cell_pos();
 
-            let empty_pos = original_board.empty_cell_pos();
-            if !Self::is_position_inside_sub_board(empty_pos, translation_offset, rows, columns) {
-                panic!("Sub board must contain the empty cell.");
-            }
+        assert!(
+            Self::is_position_inside_sub_board(empty_pos, translation_offset, rows, columns),
+            "Sub board must contain the empty cell."
+        );
 
-            Self {
-                original_board,
-                translation_offset,
-                rows,
-                columns
-            }
-        }
-        fn is_position_inside_sub_board(pos: (u8, u8), offset: u8, rows: u8, columns: u8) -> bool {
-            let (row, col) = pos;
-            row >= offset && row < offset + rows && col >= offset && col < offset + columns
+        Self {
+            original_board,
+            translation_offset,
+            rows,
+            columns,
         }
     }
+    fn is_position_inside_sub_board(pos: (u8, u8), offset: u8, rows: u8, columns: u8) -> bool {
+        let (row, col) = pos;
+        row >= offset && row < offset + rows && col >= offset && col < offset + columns
+    }
+}
 
-
-impl<'a> Board for SubBoard<'a>{
+impl<'a> Board for SubBoard<'a> {
     fn dimensions(&self) -> (u8, u8) {
         (self.rows, self.columns)
     }
