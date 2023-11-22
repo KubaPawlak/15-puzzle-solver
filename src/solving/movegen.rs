@@ -1,7 +1,7 @@
 use crate::board::BoardMove;
-
 pub fn generate_pairs_of_moves(
     previous_pair: Option<(BoardMove, BoardMove)>,
+    previous_move: Option<BoardMove>,
 ) -> Vec<(BoardMove, BoardMove)> {
     let moves = [
         BoardMove::Up,
@@ -19,6 +19,11 @@ pub fn generate_pairs_of_moves(
                     //Avoid rewinding previous move
                     if !is_opposite_move(first_move, prev_second) {
                         pairs.push((first_move, second_move));
+                    } else if let Some(prev_move) = previous_move {
+                        // Check if there was a single previous move
+                        if !is_opposite_move(first_move, prev_move) {
+                            pairs.push((first_move, second_move));
+                        }
                     }
                 } else {
                     pairs.push((first_move, second_move))
@@ -38,4 +43,14 @@ fn is_opposite_move(move1: BoardMove, move2: BoardMove) -> bool {
             | (BoardMove::Left, BoardMove::Right)
             | (BoardMove::Right, BoardMove::Left)
     )
+}
+/// Helper function to generate single moves. Needed to be used first if number of steps in solution is odd.
+pub fn generate_single_moves() -> Vec<BoardMove> {
+    let moves = [
+        BoardMove::Up,
+        BoardMove::Down,
+        BoardMove::Left,
+        BoardMove::Right,
+    ];
+    moves.to_vec()
 }
