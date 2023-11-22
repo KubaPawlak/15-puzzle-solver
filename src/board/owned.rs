@@ -4,7 +4,7 @@ use crate::board::{Board, BoardMove};
 pub struct OwnedBoard {
     pub(super) rows: u8,
     pub(super) columns: u8,
-    pub(super) cells: Vec<u8>,
+    pub(super) cells: Box<[u8]>,
 }
 
 impl OwnedBoard {

@@ -68,7 +68,7 @@ impl FromStr for OwnedBoard {
         Ok(Self {
             rows,
             columns,
-            cells,
+            cells: cells.into_boxed_slice(),
         })
     }
 }
