@@ -4,6 +4,7 @@ use parity::{calculate_parity, solved_board_parity, Parity};
 
 use crate::board::Board;
 
+mod movegen;
 mod parity;
 
 pub fn is_solvable(board: &impl Board) -> bool {
