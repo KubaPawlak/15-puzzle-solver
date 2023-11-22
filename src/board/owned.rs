@@ -50,7 +50,12 @@ impl Board for OwnedBoard {
     }
 
     fn can_move(&self, board_move: BoardMove) -> bool {
-        todo!()
+        match board_move {
+            BoardMove::Up => self.empty_cell_pos().0 > 0,
+            BoardMove::Down => self.empty_cell_pos().0 < self.rows - 1,
+            BoardMove::Left => self.empty_cell_pos().1 > 0,
+            BoardMove::Right => self.empty_cell_pos().1 < self.columns - 1,
+        }
     }
 
     fn exec_move(&mut self, board_move: BoardMove) {
