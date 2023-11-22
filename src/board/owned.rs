@@ -59,7 +59,24 @@ impl Board for OwnedBoard {
     }
 
     fn exec_move(&mut self, board_move: BoardMove) {
-        todo!()
+        assert!(self.can_move(board_move), "Board cannot execute this move");
+
+        let (zero_row, zero_col) = self.empty_cell_pos();
+        let (target_row, target_col) = match board_move {
+            BoardMove::Up => (zero_row - 1, zero_col),
+            BoardMove::Down => (zero_row + 1, zero_col),
+            BoardMove::Left => (zero_row, zero_col - 1),
+            BoardMove::Right => (zero_row, zero_col + 1),
+        };
+
+        let zero_index = self.flatten_index(zero_row, zero_col);
+        let target_index = self.flatten_index(target_row, target_col);
+
+        debug_assert_ne!(zero_index, target_index);
+
+        let target_value = self.cells[target_index];
+        self.cells[target_index] = 0;
+        self.cells[zero_index] = target_value;
     }
 }
 
