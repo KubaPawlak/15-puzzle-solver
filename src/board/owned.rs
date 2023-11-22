@@ -1,4 +1,4 @@
-use crate::board::{Board, BoardMove};
+use super::{Board, BoardMove, SubBoard};
 
 #[derive(Clone)]
 pub struct OwnedBoard {
@@ -77,6 +77,23 @@ impl Board for OwnedBoard {
         let target_value = self.cells[target_index];
         self.cells[target_index] = 0;
         self.cells[zero_index] = target_value;
+    }
+}
+
+impl From<&SubBoard<'_>> for OwnedBoard {
+    fn from(other: &SubBoard) -> Self {
+        let (rows, columns) = other.dimensions();
+        let mut cells = vec![];
+        for r in 0..rows {
+            for c in 0..columns {
+                cells.push(other.at(r, c));
+            }
+        }
+        Self {
+            rows,
+            columns,
+            cells: cells.into_boxed_slice(),
+        }
     }
 }
 
