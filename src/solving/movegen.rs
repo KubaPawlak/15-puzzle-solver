@@ -5,7 +5,7 @@ enum MoveSequence {
     Double(BoardMove, BoardMove),
 }
 
-pub fn next_moves(board: &impl Board, previous_move: Option<BoardMove>) -> Vec<MoveSequence> {
+pub fn next_moves(_board: &impl Board, previous_move: Option<BoardMove>) -> Vec<MoveSequence> {
     use MoveSequence::Double;
 
     let moves = [
@@ -14,27 +14,44 @@ pub fn next_moves(board: &impl Board, previous_move: Option<BoardMove>) -> Vec<M
         BoardMove::Left,
         BoardMove::Right,
     ];
-    let mut pairs = Vec::new();
+    let mut next_moves = Vec::new();
 
-    // todo: Check parity of the required number of moves for board and generate appropriate number of moves
+    let generate_single_move = false; // todo: Check parity of the required number of moves for board and generate appropriate number of moves
 
     for first_move in moves {
-        for second_move in moves {
-            // Avoid obviously unsound moves
-            if !is_opposite_move(first_move, second_move) {
-                if let Some(prev_move) = previous_move {
-                    //Avoid rewinding previous move
-                    if !is_opposite_move(first_move, prev_move) {
-                        pairs.push(Double(first_move, second_move));
+        if generate_single_move {
+            unimplemented!()
+        } else {
+            for second_move in moves {
+                // Avoid obviously unsound moves
+                if !is_opposite_move(first_move, second_move) {
+                    if let Some(prev_move) = previous_move {
+                        //Avoid rewinding previous move
+                        if !is_opposite_move(first_move, prev_move) {
+                            next_moves.push(Double(first_move, second_move));
+                        }
+                    } else {
+                        next_moves.push(Double(first_move, second_move))
                     }
-                } else {
-                    pairs.push(Double(first_move, second_move))
                 }
             }
         }
     }
 
-    pairs
+    #[cfg(debug_assertions)]
+    {
+        if generate_single_move {
+            assert!(next_moves
+                .iter()
+                .all(|m| matches!(m, MoveSequence::Single(_))));
+        } else {
+            assert!(next_moves
+                .iter()
+                .all(|m| matches!(m, MoveSequence::Double(_, _))));
+        }
+    }
+
+    next_moves
 }
 
 /// Helper function to check if two moves are opposites (e.g., Up and Down)
