@@ -40,7 +40,7 @@ impl Add for Parity {
     }
 }
 
-pub fn calculate_parity<T: Into<usize> + Copy>(permutation: &[T]) -> Parity {
+pub fn permuation_parity<T: Into<usize> + Copy>(permutation: &[T]) -> Parity {
     let mut visited = bit_set::BitSet::with_capacity(permutation.len());
     let mut cycle_lengths = vec![];
 
@@ -69,25 +69,17 @@ pub fn calculate_parity<T: Into<usize> + Copy>(permutation: &[T]) -> Parity {
 
 /// Returns the parity of the number of moves required to move the empty cell into the solved position
 pub fn required_moves_parity(board: &impl Board) -> Parity {
-    fn manhattan_distance(p1: (u8, u8), p2: (u8, u8)) -> usize {
-        abs_diff(p1.0, p2.0) + abs_diff(p1.1, p2.1)
-    }
-
-    fn abs_diff(x: u8, y: u8) -> usize {
-        if x > y {
-            (x - y) as usize
-        } else {
-            (y - x) as usize
-        }
-    }
-
     let (rows, columns) = board.dimensions();
+
     let zero_manhattan_distance = {
         let final_empty_pos = (rows - 1, columns - 1);
         let current_empty_pos = board.empty_cell_pos();
-        manhattan_distance(final_empty_pos, current_empty_pos)
+
+        // we know that the final position is in the last row and column, so there is no possibility of overflow
+        (final_empty_pos.0 - current_empty_pos.0) + (final_empty_pos.1 - current_empty_pos.1)
     };
-    Parity::from(zero_manhattan_distance)
+
+    Parity::from(zero_manhattan_distance as usize)
 }
 
 pub fn solved_board_parity(board: &impl Board) -> Parity {
@@ -107,13 +99,13 @@ mod test {
     #[test]
     fn odd_permutation_has_odd_parity() {
         let odd_permutation = [2u8, 3, 4, 1, 0];
-        assert_eq!(Parity::Odd, calculate_parity(&odd_permutation));
+        assert_eq!(Parity::Odd, permuation_parity(&odd_permutation));
     }
 
     #[test]
     fn even_permutation_has_even_parity() {
         let even_permutation = [0u8, 1, 4, 2, 3];
-        assert_eq!(Parity::Even, calculate_parity(&even_permutation));
+        assert_eq!(Parity::Even, permuation_parity(&even_permutation));
     }
 
     mod solved_board_has_inverse_parity_to_its_size {
@@ -125,7 +117,7 @@ mod test {
 
             let inverse_parity = Parity::from(board_size).opposite();
 
-            assert_eq!(inverse_parity, calculate_parity(&board_cells));
+            assert_eq!(inverse_parity, permuation_parity(&board_cells));
         }
 
         macro_rules! test_cases {
