@@ -1,6 +1,13 @@
-use crate::board::BoardMove;
+use crate::board::{Board, BoardMove};
 
-pub fn generate_pairs_of_moves(previous_move: Option<BoardMove>) -> Vec<(BoardMove, BoardMove)> {
+enum MoveSequence {
+    Single(BoardMove),
+    Double(BoardMove, BoardMove),
+}
+
+pub fn next_moves(board: &impl Board, previous_move: Option<BoardMove>) -> Vec<MoveSequence> {
+    use MoveSequence::Double;
+
     let moves = [
         BoardMove::Up,
         BoardMove::Down,
@@ -9,21 +16,24 @@ pub fn generate_pairs_of_moves(previous_move: Option<BoardMove>) -> Vec<(BoardMo
     ];
     let mut pairs = Vec::new();
 
-    for &first_move in &moves {
-        for &second_move in &moves {
+    // todo: Check parity of the required number of moves for board and generate appropriate number of moves
+
+    for first_move in moves {
+        for second_move in moves {
             // Avoid obviously unsound moves
             if !is_opposite_move(first_move, second_move) {
                 if let Some(prev_move) = previous_move {
                     //Avoid rewinding previous move
                     if !is_opposite_move(first_move, prev_move) {
-                        pairs.push((first_move, second_move));
+                        pairs.push(Double(first_move, second_move));
                     }
                 } else {
-                    pairs.push((first_move, second_move))
+                    pairs.push(Double(first_move, second_move))
                 }
             }
         }
     }
+
     pairs
 }
 
