@@ -93,13 +93,46 @@ mod test {
         assert_eq!(Parity::Even, calculate_parity(&even_permutation));
     }
 
-    #[test]
-    fn solved_board_has_inverse_parity_to_its_size() {
-        let board_size = 16;
-        let board_cells: Vec<u8> = (1..board_size as u8).chain(once(0)).collect();
+    mod solved_board_has_inverse_parity_to_its_size {
+        use super::*;
 
-        let inverse_parity = Parity::from(board_size).opposite();
+        fn solved_board_has_inverse_parity_to_its_size(rows: usize, columns: usize) {
+            let board_size = rows * columns;
+            let board_cells: Vec<u8> = (1..board_size as u8).chain(once(0)).collect();
 
-        assert_eq!(inverse_parity, calculate_parity(&board_cells));
+            let inverse_parity = Parity::from(board_size).opposite();
+
+            assert_eq!(inverse_parity, calculate_parity(&board_cells));
+        }
+
+        macro_rules! test_cases {
+            ($($name:ident ($rows:expr, $cols:expr)),*) => {
+                $(
+                    #[test]
+                    fn $name (){
+                        solved_board_has_inverse_parity_to_its_size($rows, $cols)
+                    }
+                )*
+            };
+        }
+
+        test_cases! {
+            board_2x2 (2,2),
+            board_2x3 (2,3),
+            board_2x4 (2,4),
+            board_2x5 (2,5),
+            board_3x2 (3,2),
+            board_3x3 (3,3),
+            board_3x4 (3,4),
+            board_3x5 (3,5),
+            board_4x2 (4,2),
+            board_4x3 (4,3),
+            board_4x4 (4,4),
+            board_4x5 (4,5),
+            board_5x2 (5,2),
+            board_5x3 (5,3),
+            board_5x4 (5,4),
+            board_5x5 (5,5)
+        }
     }
 }
