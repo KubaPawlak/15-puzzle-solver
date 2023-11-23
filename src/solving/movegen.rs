@@ -1,6 +1,6 @@
 use crate::board::{Board, BoardMove};
 
-enum MoveSequence {
+pub enum MoveSequence {
     Single(BoardMove),
     Double(BoardMove, BoardMove),
 }
