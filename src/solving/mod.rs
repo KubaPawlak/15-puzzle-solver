@@ -1,24 +1,10 @@
-use std::ops::Sub;
-
-use parity::{calculate_parity, solved_board_parity, Parity};
+use parity::{calculate_parity, required_moves_parity, solved_board_parity};
 
 use crate::board::Board;
 
 mod parity;
 
-pub fn is_solvable(board: &impl Board) -> bool {
-    fn manhattan_distance<T: Sub<Output = T> + Ord + Into<isize>>(p1: (T, T), p2: (T, T)) -> usize {
-        abs_diff(p1.0, p2.0) + abs_diff(p1.1, p2.1)
-    }
-
-    fn abs_diff<T: Sub<Output = T> + Ord + Into<isize>>(x: T, y: T) -> usize {
-        if x > y {
-            (x - y).into() as usize
-        } else {
-            (y - x).into() as usize
-        }
-    }
-
+fn is_solvable(board: &impl Board) -> bool {
     let (rows, columns) = board.dimensions();
     let mut cells = vec![];
 
@@ -32,13 +18,7 @@ pub fn is_solvable(board: &impl Board) -> bool {
 
     let solved_board_parity = solved_board_parity(board);
 
-    let zero_manhattan_distance = {
-        let final_empty_pos = (rows - 1, columns - 1);
-        let current_empty_pos = board.empty_cell_pos();
-        manhattan_distance(final_empty_pos, current_empty_pos)
-    };
-
-    board_parity + solved_board_parity == Parity::from(zero_manhattan_distance)
+    board_parity + required_moves_parity(board) == solved_board_parity
 }
 
 #[cfg(test)]

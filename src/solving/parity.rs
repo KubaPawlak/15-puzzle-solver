@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 use crate::board::Board;
 
@@ -65,6 +65,29 @@ pub fn calculate_parity<T: Into<usize> + Copy>(permutation: &[T]) -> Parity {
         .into_iter()
         .map(|len| Parity::from(len).opposite()) // parity of a cycle is opposite of the parity of its length
         .fold(Parity::Even, Parity::add)
+}
+
+/// Returns the parity of the number of moves required to move the empty cell into the solved position
+pub fn required_moves_parity(board: &impl Board) -> Parity {
+    fn manhattan_distance(p1: (u8, u8), p2: (u8, u8)) -> usize {
+        abs_diff(p1.0, p2.0) + abs_diff(p1.1, p2.1)
+    }
+
+    fn abs_diff(x: u8, y: u8) -> usize {
+        if x > y {
+            (x - y) as usize
+        } else {
+            (y - x) as usize
+        }
+    }
+
+    let (rows, columns) = board.dimensions();
+    let zero_manhattan_distance = {
+        let final_empty_pos = (rows - 1, columns - 1);
+        let current_empty_pos = board.empty_cell_pos();
+        manhattan_distance(final_empty_pos, current_empty_pos)
+    };
+    Parity::from(zero_manhattan_distance)
 }
 
 pub fn solved_board_parity(board: &impl Board) -> Parity {
