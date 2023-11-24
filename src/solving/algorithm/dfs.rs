@@ -90,3 +90,47 @@ impl DFSSolver {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::board::{Board, OwnedBoard};
+    use crate::solving::parity::Parity;
+
+    use super::*;
+
+    #[test]
+    fn does_backtrack_when_setting_was_already_found() {
+        use crate::board::BoardMove::*;
+        let board_str = r#"4 4
+1  2  3  4
+5  6  0  8
+9  10 7  12
+13 14 11 15
+"#;
+        let mut board: OwnedBoard = board_str.parse().unwrap();
+
+        // odd parity is required so that only 1 move ahead is considered
+        assert_eq!(
+            crate::solving::parity::required_moves_parity(&board),
+            Parity::Odd
+        );
+
+        let mut visited = HashSet::new();
+        for m in [Up, Down, Left, Right] {
+            board.exec_move(m);
+            visited.insert(board.clone());
+            board.exec_move(m.opposite());
+        }
+
+        let mut solver = DFSSolver {
+            board,
+            visited,
+            current_path: vec![],
+        };
+        // at this point visited contains all the possible board positions that can be reached from the current state
+        // therefore, it is expected that `perform_iteration` will return Err
+        let result = solver.perform_iteration(0, None);
+
+        assert!(result.is_err())
+    }
+}
