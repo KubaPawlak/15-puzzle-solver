@@ -1,11 +1,14 @@
 use crate::board::{Board, BoardMove};
+use crate::solving::movegen::MoveSequence::Single;
 
 pub enum MoveSequence {
     Single(BoardMove),
     Double(BoardMove, BoardMove),
 }
 
-pub fn next_moves(_board: &impl Board, previous_move: Option<BoardMove>) -> Vec<MoveSequence> {
+/// Generates the next moves to perform on the board.
+/// This function only generates moves that can be executed on a board, and have the proper parity
+pub fn next_moves(board: &impl Board, previous_move: Option<BoardMove>) -> Vec<MoveSequence> {
     use MoveSequence::Double;
 
     let moves = [
@@ -19,20 +22,30 @@ pub fn next_moves(_board: &impl Board, previous_move: Option<BoardMove>) -> Vec<
     let generate_single_move = false; // todo: Check parity of the required number of moves for board and generate appropriate number of moves
 
     for first_move in moves {
+        let first_position = position_after_move(board.empty_cell_pos(), first_move);
+        if !is_inside_board(first_position, board) {
+            // cannot execute move
+            continue;
+        }
+        if let Some(previous_move) = previous_move {
+            if first_move == previous_move.opposite() {
+                // move would undo the previous move
+                continue;
+            }
+        }
+
         if generate_single_move {
-            unimplemented!()
+            next_moves.push(Single(first_move))
         } else {
             for second_move in moves {
+                let second_position = position_after_move(first_position, second_move);
+                if !is_inside_board(second_position, board) {
+                    // second move is impossible to execute
+                    continue;
+                }
                 // Avoid obviously unsound moves
-                if !is_opposite_move(first_move, second_move) {
-                    if let Some(prev_move) = previous_move {
-                        //Avoid rewinding previous move
-                        if !is_opposite_move(first_move, prev_move) {
-                            next_moves.push(Double(first_move, second_move));
-                        }
-                    } else {
-                        next_moves.push(Double(first_move, second_move))
-                    }
+                if second_move != first_move.opposite() {
+                    next_moves.push(Double(first_move, second_move));
                 }
             }
         }
@@ -54,20 +67,20 @@ pub fn next_moves(_board: &impl Board, previous_move: Option<BoardMove>) -> Vec<
     next_moves
 }
 
-/// Helper function to check if two moves are opposites (e.g., Up and Down)
-fn is_opposite_move(move1: BoardMove, move2: BoardMove) -> bool {
-    use BoardMove::*;
-    matches!(
-        (move1, move2),
-        (Up, Down) | (Down, Up) | (Left, Right) | (Right, Left)
-    )
+/// Helper function to check where the empty square would move, to ensure that the move is able to be performed
+fn position_after_move(initial_position: (u8, u8), board_move: BoardMove) -> (u8, u8) {
+    let (row, col) = initial_position;
+    match board_move {
+        BoardMove::Up => (row - 1, col),
+        BoardMove::Down => (row + 1, col),
+        BoardMove::Left => (row, col - 1),
+        BoardMove::Right => (row, col + 1),
+    }
 }
-/// Helper function to generate single moves. Needed to be used first if number of steps in solution is odd.
-pub fn generate_single_moves() -> Vec<BoardMove> {
-    vec![
-        BoardMove::Up,
-        BoardMove::Down,
-        BoardMove::Left,
-        BoardMove::Right,
-    ]
+
+fn is_inside_board(position: (u8, u8), board: &impl Board) -> bool {
+    let (row, col) = position;
+    let (rows, columns) = board.dimensions();
+
+    row > 0 && col > 0 && row < rows && col < columns
 }

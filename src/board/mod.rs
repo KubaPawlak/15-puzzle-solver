@@ -7,7 +7,7 @@ mod parsing;
 mod sub_board;
 
 #[repr(u8)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum BoardMove {
     Up,
     Down,
