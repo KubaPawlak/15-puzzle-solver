@@ -1,6 +1,6 @@
 use super::{Board, BoardMove, SubBoard};
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct OwnedBoard {
     pub(super) rows: u8,
     pub(super) columns: u8,
@@ -94,6 +94,12 @@ impl From<&SubBoard<'_>> for OwnedBoard {
             columns,
             cells: cells.into_boxed_slice(),
         }
+    }
+}
+
+impl std::hash::Hash for OwnedBoard {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.cells.hash(state);
     }
 }
 
