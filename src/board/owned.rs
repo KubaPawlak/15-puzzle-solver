@@ -1,10 +1,10 @@
-use crate::board::{Board, BoardMove};
+use super::{Board, BoardMove, SubBoard};
 
 #[derive(Clone)]
 pub struct OwnedBoard {
     pub(super) rows: u8,
     pub(super) columns: u8,
-    pub(super) cells: Vec<u8>,
+    pub(super) cells: Box<[u8]>,
 }
 
 impl OwnedBoard {
@@ -50,11 +50,50 @@ impl Board for OwnedBoard {
     }
 
     fn can_move(&self, board_move: BoardMove) -> bool {
-        todo!()
+        match board_move {
+            BoardMove::Up => self.empty_cell_pos().0 > 0,
+            BoardMove::Down => self.empty_cell_pos().0 < self.rows - 1,
+            BoardMove::Left => self.empty_cell_pos().1 > 0,
+            BoardMove::Right => self.empty_cell_pos().1 < self.columns - 1,
+        }
     }
 
     fn exec_move(&mut self, board_move: BoardMove) {
-        todo!()
+        assert!(self.can_move(board_move), "Board cannot execute this move");
+
+        let (zero_row, zero_col) = self.empty_cell_pos();
+        let (target_row, target_col) = match board_move {
+            BoardMove::Up => (zero_row - 1, zero_col),
+            BoardMove::Down => (zero_row + 1, zero_col),
+            BoardMove::Left => (zero_row, zero_col - 1),
+            BoardMove::Right => (zero_row, zero_col + 1),
+        };
+
+        let zero_index = self.flatten_index(zero_row, zero_col);
+        let target_index = self.flatten_index(target_row, target_col);
+
+        debug_assert_ne!(zero_index, target_index);
+
+        let target_value = self.cells[target_index];
+        self.cells[target_index] = 0;
+        self.cells[zero_index] = target_value;
+    }
+}
+
+impl From<&SubBoard<'_>> for OwnedBoard {
+    fn from(other: &SubBoard) -> Self {
+        let (rows, columns) = other.dimensions();
+        let mut cells = vec![];
+        for r in 0..rows {
+            for c in 0..columns {
+                cells.push(other.at(r, c));
+            }
+        }
+        Self {
+            rows,
+            columns,
+            cells: cells.into_boxed_slice(),
+        }
     }
 }
 
@@ -73,10 +112,92 @@ mod tests {
         }
     }
 
+    // Creates board without the empty cell
+    // Note that this as invalid formation of the board, to be used only for unit testing purposes
+    fn create_filled_board() -> OwnedBoard {
+        OwnedBoard {
+            rows: 4,
+            columns: 4,
+            cells: (1..=16).collect(),
+        }
+    }
+
     #[test]
     fn solved_board_shows_as_solved() {
         let solved_board = &create_solved_board();
 
         assert!(solved_board.is_solved());
+    }
+
+    #[test]
+    fn can_move_works_correctly() {
+        let mut board = create_filled_board();
+
+        board.cells[15] = 0;
+        assert!(board.can_move(BoardMove::Up));
+        assert!(!board.can_move(BoardMove::Down));
+        assert!(board.can_move(BoardMove::Left));
+        assert!(!board.can_move(BoardMove::Right));
+
+        board.cells[15] = 16;
+        board.cells[0] = 0;
+        assert!(!board.can_move(BoardMove::Up));
+        assert!(board.can_move(BoardMove::Down));
+        assert!(!board.can_move(BoardMove::Left));
+        assert!(board.can_move(BoardMove::Right));
+    }
+
+    mod exec_move {
+        use crate::board::{Board, BoardMove};
+
+        use super::create_filled_board;
+
+        #[test]
+        fn move_up() {
+            let mut board = create_filled_board();
+            board.cells[15] = 0;
+            assert_eq!((3, 3), board.empty_cell_pos());
+
+            let cell_above = board.at(2, 3);
+            board.exec_move(BoardMove::Up);
+            assert_eq!((2, 3), board.empty_cell_pos());
+            assert_eq!(cell_above, board.at(3, 3));
+        }
+
+        #[test]
+        fn move_down() {
+            let mut board = create_filled_board();
+            board.cells[0] = 0;
+            assert_eq!((0, 0), board.empty_cell_pos());
+
+            let cell_below = board.at(1, 0);
+            board.exec_move(BoardMove::Down);
+            assert_eq!((1, 0), board.empty_cell_pos());
+            assert_eq!(cell_below, board.at(0, 0));
+        }
+
+        #[test]
+        fn move_left() {
+            let mut board = create_filled_board();
+            board.cells[15] = 0;
+            assert_eq!((3, 3), board.empty_cell_pos());
+
+            let cell_left = board.at(3, 2);
+            board.exec_move(BoardMove::Left);
+            assert_eq!((3, 2), board.empty_cell_pos());
+            assert_eq!(cell_left, board.at(3, 3));
+        }
+
+        #[test]
+        fn move_right() {
+            let mut board = create_filled_board();
+            board.cells[0] = 0;
+            assert_eq!((0, 0), board.empty_cell_pos());
+
+            let cell_right = board.at(0, 1);
+            board.exec_move(BoardMove::Right);
+            assert_eq!((0, 1), board.empty_cell_pos());
+            assert_eq!(cell_right, board.at(0, 0));
+        }
     }
 }

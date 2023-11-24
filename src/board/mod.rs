@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 pub use owned::OwnedBoard;
+pub use sub_board::SubBoard;
 
 mod owned;
 mod parsing;
