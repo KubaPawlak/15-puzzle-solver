@@ -15,6 +15,17 @@ pub enum BoardMove {
     Right,
 }
 
+impl BoardMove {
+    pub fn opposite(&self) -> Self {
+        match self {
+            BoardMove::Up => BoardMove::Down,
+            BoardMove::Down => BoardMove::Up,
+            BoardMove::Left => BoardMove::Right,
+            BoardMove::Right => BoardMove::Left,
+        }
+    }
+}
+
 impl Display for BoardMove {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
