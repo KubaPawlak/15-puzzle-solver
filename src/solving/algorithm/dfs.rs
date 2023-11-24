@@ -51,8 +51,30 @@ impl DFSSolver {
 
         for next_move in next_moves(&self.board, self.current_path.last().copied()) {
             self.exec_move_sequence(&next_move);
-            if self.perform_iteration(current_depth + 1, max_depth).is_ok() {
-                return Ok(());
+            const STACK_RED_ZONE: usize = 64 * 1024;
+            #[cfg(feature = "stack-expansion")]
+            {
+                // If we have less than `STACK_RED_ZONE` stack remaining, we allocate 4MB for a new stack
+                if stacker::maybe_grow(STACK_RED_ZONE, 4 * 1024 * 1024, || {
+                    self.perform_iteration(current_depth + 1, max_depth)
+                })
+                .is_ok()
+                {
+                    return Ok(());
+                }
+            }
+            #[cfg(not(feature = "stack-expansion"))]
+            {
+                if let Some(remaining) = stacker::remaining_stack() {
+                    // If we have less than `STACK_RED_ZONE` stack remaining, we must backtrack to avoid stack overflow
+                    if remaining < STACK_RED_ZONE {
+                        self.undo_move_sequence(&next_move);
+                        return Err(());
+                    }
+                }
+                if self.perform_iteration(current_depth + 1, max_depth).is_ok() {
+                    return Ok(());
+                }
             }
             self.undo_move_sequence(&next_move);
         }

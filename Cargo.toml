@@ -6,10 +6,12 @@ repository = "https://github.com/KubaPawlak/15-puzzle-solver"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+stack-expansion = []
 
 [dependencies]
 bit-set = "0.5"
+stacker = "0.1"
 
 [lints.rust]
 private_interfaces = "deny"
