@@ -2,6 +2,7 @@ use parity::{permuation_parity, required_moves_parity, solved_board_parity};
 
 use crate::board::Board;
 
+pub mod algorithm;
 mod movegen;
 mod parity;
 
