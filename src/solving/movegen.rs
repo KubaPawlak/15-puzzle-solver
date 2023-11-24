@@ -1,5 +1,7 @@
 use crate::board::{Board, BoardMove};
 use crate::solving::movegen::MoveSequence::Single;
+use crate::solving::parity;
+use crate::solving::parity::Parity;
 
 pub enum MoveSequence {
     Single(BoardMove),
@@ -19,7 +21,7 @@ pub fn next_moves(board: &impl Board, previous_move: Option<BoardMove>) -> Vec<M
     ];
     let mut next_moves = Vec::new();
 
-    let generate_single_move = false; // todo: Check parity of the required number of moves for board and generate appropriate number of moves
+    let generate_single_move = parity::required_moves_parity(board) == Parity::Odd;
 
     for first_move in moves {
         let first_position = position_after_move(board.empty_cell_pos(), first_move);
