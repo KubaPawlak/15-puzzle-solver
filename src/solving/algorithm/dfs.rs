@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use crate::board::{Board, BoardMove, OwnedBoard};
+use crate::solving::algorithm::Solver;
 use crate::solving::is_solvable;
 use crate::solving::movegen::{next_moves, MoveSequence};
 
@@ -17,17 +18,6 @@ impl DFSSolver {
             visited: HashSet::new(),
             current_path: vec![],
         }
-    }
-
-    pub fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
-        if !is_solvable(&self.board) {
-            return Err(());
-        }
-
-        self.perform_iteration(0, None)
-            .expect("If board is solvable, DFS without depth limit should always find a solution");
-
-        Ok(self.current_path)
     }
 
     fn perform_iteration(
@@ -51,34 +41,44 @@ impl DFSSolver {
 
         for next_move in next_moves(&self.board, self.current_path.last().copied()) {
             self.exec_move_sequence(&next_move);
-            const STACK_RED_ZONE: usize = 64 * 1024;
-            #[cfg(feature = "stack-expansion")]
-            {
-                // If we have less than `STACK_RED_ZONE` stack remaining, we allocate 4MB for a new stack
-                if stacker::maybe_grow(STACK_RED_ZONE, 4 * 1024 * 1024, || {
-                    self.perform_iteration(current_depth + 1, max_depth)
-                })
-                .is_ok()
-                {
-                    return Ok(());
-                }
-            }
-            #[cfg(not(feature = "stack-expansion"))]
-            {
-                if let Some(remaining) = stacker::remaining_stack() {
-                    // If we have less than `STACK_RED_ZONE` stack remaining, we must backtrack to avoid stack overflow
-                    if remaining < STACK_RED_ZONE {
-                        self.undo_move_sequence(&next_move);
-                        return Err(());
-                    }
-                }
-                if self.perform_iteration(current_depth + 1, max_depth).is_ok() {
-                    return Ok(());
-                }
+            if self._call_recursive(current_depth + 1, max_depth).is_ok() {
+                return Ok(());
             }
             self.undo_move_sequence(&next_move);
         }
 
+        Err(())
+    }
+
+    fn _call_recursive(
+        &mut self,
+        current_depth: usize,
+        max_depth: Option<usize>,
+    ) -> Result<(), ()> {
+        const STACK_RED_ZONE: usize = 64 * 1024;
+        #[cfg(feature = "stack-expansion")]
+        {
+            // If we have less than `STACK_RED_ZONE` stack remaining, we allocate 4MB for a new stack
+            if stacker::maybe_grow(STACK_RED_ZONE, 4 * 1024 * 1024, || {
+                self.perform_iteration(current_depth + 1, max_depth)
+            })
+            .is_ok()
+            {
+                return Ok(());
+            }
+        }
+        #[cfg(not(feature = "stack-expansion"))]
+        {
+            if let Some(remaining) = stacker::remaining_stack() {
+                // If we have less than `STACK_RED_ZONE` stack remaining, we must backtrack to avoid stack overflow
+                if remaining < STACK_RED_ZONE {
+                    return Err(());
+                }
+            }
+            if self.perform_iteration(current_depth + 1, max_depth).is_ok() {
+                return Ok(());
+            }
+        }
         Err(())
     }
 
@@ -110,6 +110,52 @@ impl DFSSolver {
                 self.current_path.pop();
             }
         }
+    }
+}
+
+impl Solver for DFSSolver {
+    fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
+        if !is_solvable(&self.board) {
+            return Err(());
+        }
+
+        self.perform_iteration(0, None)
+            .expect("If board is solvable, DFS without depth limit should always find a solution");
+
+        Ok(self.current_path)
+    }
+}
+
+pub struct IncrementalDFSSolver {
+    dfs_solver: DFSSolver,
+}
+
+impl IncrementalDFSSolver {
+    pub fn new(board: OwnedBoard) -> Self {
+        Self {
+            dfs_solver: DFSSolver::new(board),
+        }
+    }
+}
+
+impl Solver for IncrementalDFSSolver {
+    fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
+        if !is_solvable(&self.dfs_solver.board) {
+            return Err(());
+        }
+
+        let mut max_depth = 1;
+        while self
+            .dfs_solver
+            .perform_iteration(0, Some(max_depth))
+            .is_err()
+        {
+            max_depth += 1;
+            self.dfs_solver.visited.clear();
+            dbg!(max_depth);
+        }
+
+        Ok(self.dfs_solver.current_path)
     }
 }
 
