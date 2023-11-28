@@ -3,19 +3,21 @@ use std::collections::HashSet;
 use crate::board::{Board, BoardMove, OwnedBoard};
 use crate::solving::algorithm::Solver;
 use crate::solving::is_solvable;
-use crate::solving::movegen::{next_moves, MoveSequence};
+use crate::solving::movegen::{MoveGenerator, MoveSequence};
 
 pub struct DFSSolver {
     visited: HashSet<OwnedBoard>,
+    move_generator: MoveGenerator,
     current_path: Vec<BoardMove>,
     board: OwnedBoard,
 }
 
 impl DFSSolver {
-    pub fn new(board: OwnedBoard) -> Self {
+    pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             board,
             visited: HashSet::new(),
+            move_generator,
             current_path: vec![],
         }
     }
@@ -39,7 +41,7 @@ impl DFSSolver {
             }
         }
 
-        for next_move in next_moves(&self.board, self.current_path.last().copied()) {
+        for next_move in self.move_generator.generate_moves(&self.board, self.current_path.last().copied()) {
             self.exec_move_sequence(&next_move);
             if self._call_recursive(current_depth + 1, max_depth).is_ok() {
                 return Ok(());
@@ -132,8 +134,11 @@ pub struct IncrementalDFSSolver {
 
 impl IncrementalDFSSolver {
     pub fn new(board: OwnedBoard) -> Self {
+        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_generator = MoveGenerator::new(move_order);
+
         Self {
-            dfs_solver: DFSSolver::new(board),
+            dfs_solver: DFSSolver::new(board, move_generator),
         }
     }
 }
@@ -193,6 +198,7 @@ mod test {
         let mut solver = DFSSolver {
             board,
             visited,
+            move_generator,
             current_path: vec![],
         };
         // at this point visited contains all the possible board positions that can be reached from the current state

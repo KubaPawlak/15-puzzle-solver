@@ -1,5 +1,4 @@
 use crate::board::{Board, BoardMove};
-use crate::solving::movegen::MoveSequence::Single;
 use crate::solving::parity;
 use crate::solving::parity::Parity;
 
@@ -8,67 +7,66 @@ pub enum MoveSequence {
     Double(BoardMove, BoardMove),
 }
 
-/// Generates the next moves to perform on the board.
-/// This function only generates moves that can be executed on a board, and have the proper parity
-pub fn next_moves(board: &impl Board, previous_move: Option<BoardMove>) -> Vec<MoveSequence> {
-    use MoveSequence::Double;
+pub struct MoveGenerator {
+    moves: Vec<BoardMove>,
+}
 
-    let moves = [
-        BoardMove::Up,
-        BoardMove::Down,
-        BoardMove::Left,
-        BoardMove::Right,
-    ];
-    let mut next_moves = Vec::new();
+impl MoveGenerator {
+    pub fn new(moves: Vec<BoardMove>) -> Self {
+        MoveGenerator { moves }
+    }
 
-    let generate_single_move = parity::required_moves_parity(board) == Parity::Odd;
+    pub fn generate_moves(&self, board: &impl Board, previous_move: Option<BoardMove>) -> Vec<MoveSequence> {
+        let mut next_moves = Vec::new();
 
-    for first_move in moves {
-        let empty_pos = board.empty_cell_pos();
-        let first_position =
-            position_after_move((empty_pos.0 as i16, empty_pos.1 as i16), first_move);
-        if !is_inside_board(first_position, board) {
-            // cannot execute move
-            continue;
-        }
-        if let Some(previous_move) = previous_move {
-            if first_move == previous_move.opposite() {
-                // move would undo the previous move
+        let generate_single_move = parity::required_moves_parity(board) == Parity::Odd;
+
+        for &first_move in &self.moves {
+            let empty_pos = board.empty_cell_pos();
+            let first_position = position_after_move((empty_pos.0 as i16, empty_pos.1 as i16), first_move);
+            if !is_inside_board(first_position, board) {
+                // cannot execute move
                 continue;
             }
-        }
-
-        if generate_single_move {
-            next_moves.push(Single(first_move))
-        } else {
-            for second_move in moves {
-                let second_position = position_after_move(first_position, second_move);
-                if !is_inside_board(second_position, board) {
-                    // second move is impossible to execute
+            if let Some(previous_move) = previous_move {
+                if first_move == previous_move.opposite() {
+                    // move would undo the previous move
                     continue;
                 }
-                // Avoid obviously unsound moves
-                if second_move != first_move.opposite() {
-                    next_moves.push(Double(first_move, second_move));
+            }
+
+            if generate_single_move {
+                next_moves.push(MoveSequence::Single(first_move))
+            } else {
+                for &second_move in &self.moves {
+                    let second_position = position_after_move(first_position, second_move);
+                    if !is_inside_board(second_position, board) {
+                        // second move is impossible to execute
+                        continue;
+                    }
+                    // Avoid obviously unsound moves
+                    if second_move != first_move.opposite() {
+                        next_moves.push(MoveSequence::Double(first_move, second_move));
+                    }
                 }
             }
         }
-    }
 
-    #[cfg(debug_assertions)]
-    {
-        if generate_single_move {
-            assert!(next_moves
-                .iter()
-                .all(|m| matches!(m, MoveSequence::Single(_))));
-        } else {
-            assert!(next_moves
-                .iter()
-                .all(|m| matches!(m, MoveSequence::Double(_, _))));
+        #[cfg(debug_assertions)]
+        {
+            if generate_single_move {
+                assert!(next_moves
+                    .iter()
+                    .all(|m| matches!(m, MoveSequence::Single(_))));
+            } else {
+                assert!(next_moves
+                    .iter()
+                    .all(|m| matches!(m, MoveSequence::Double(_, _))));
+            }
         }
-    }
 
-    next_moves
+        next_moves
+    }
 }
 
 /// Helper function to check where the empty square would move, to ensure that the move is able to be performed
@@ -95,7 +93,7 @@ mod test {
     use crate::board::{Board, BoardMove, OwnedBoard};
     use crate::solving::parity::{required_moves_parity, Parity};
 
-    use super::{next_moves, MoveSequence};
+    use super::{MoveGenerator, MoveSequence};
 
     const SOLVED_INPUT: &str = r"4 4
 1  2  3  4
@@ -108,12 +106,15 @@ mod test {
     fn generates_single_moves_with_odd_board() {
         let mut board = SOLVED_INPUT.parse::<OwnedBoard>().unwrap();
 
-        // make 3 moves, so board should require odd number to solve
+        // make 3 moves, so board should require an odd number to solve
         board.exec_move(BoardMove::Up);
         board.exec_move(BoardMove::Up);
         board.exec_move(BoardMove::Left);
 
-        let next_moves = next_moves(&board, None);
+        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_generator = MoveGenerator::new(move_order);
+
+        let next_moves = move_generator.generate_moves(&board, None);
 
         assert!(next_moves
             .iter()
@@ -124,11 +125,14 @@ mod test {
     fn generates_double_moves_with_even_board() {
         let mut board = SOLVED_INPUT.parse::<OwnedBoard>().unwrap();
 
-        // make 3 moves, so board should require odd number to solve
+        // make 3 moves, so board should require an odd number to solve
         board.exec_move(BoardMove::Up);
         board.exec_move(BoardMove::Left);
 
-        let next_moves = next_moves(&board, None);
+        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_generator = MoveGenerator::new(move_order);
+
+        let next_moves = move_generator.generate_moves(&board, None);
 
         assert!(next_moves
             .iter()
@@ -147,10 +151,13 @@ mod test {
 
         let all_moves = [Up, Down, Left, Right];
 
+        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_generator = MoveGenerator::new(move_order);
+
         for path_move in path {
             board.exec_move(path_move);
 
-            let next_moves: Vec<_> = next_moves(&board, None)
+            let next_moves: Vec<_> = move_generator.generate_moves(&board, None)
                 .into_iter()
                 .map(|m| match m {
                     MoveSequence::Single(x) => x,
@@ -178,6 +185,9 @@ mod test {
 
         let all_moves = [Up, Down, Left, Right];
 
+        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_generator = MoveGenerator::new(move_order);
+
         for path_move in path {
             board.exec_move(path_move);
 
@@ -185,7 +195,7 @@ mod test {
                 continue;
             }
 
-            for next_move in next_moves(&board, None) {
+            for next_move in move_generator.generate_moves(&board, None) {
                 match next_move {
                     MoveSequence::Single(_) => unreachable!(),
                     MoveSequence::Double(fst, snd) => {
