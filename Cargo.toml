@@ -6,12 +6,19 @@ repository = "https://github.com/KubaPawlak/15-puzzle-solver"
 version = "0.1.0"
 edition = "2021"
 
+[[bench]]
+name = "algorithms"
+harness = false
+
 [features]
 stack-expansion = []
 
 [dependencies]
 bit-set = "0.5"
 stacker = "0.1"
+
+[dev-dependencies]
+criterion = "0.5"
 
 [lints.rust]
 private_interfaces = "deny"

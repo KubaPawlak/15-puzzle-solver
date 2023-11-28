@@ -152,7 +152,6 @@ impl Solver for IncrementalDFSSolver {
         {
             max_depth += 1;
             self.dfs_solver.visited.clear();
-            dbg!(max_depth);
         }
 
         Ok(self.dfs_solver.current_path)
