@@ -16,14 +16,19 @@ impl MoveGenerator {
         MoveGenerator { moves }
     }
 
-    pub fn generate_moves(&self, board: &impl Board, previous_move: Option<BoardMove>) -> Vec<MoveSequence> {
+    pub fn generate_moves(
+        &self,
+        board: &impl Board,
+        previous_move: Option<BoardMove>,
+    ) -> Vec<MoveSequence> {
         let mut next_moves = Vec::new();
 
         let generate_single_move = parity::required_moves_parity(board) == Parity::Odd;
 
         for &first_move in &self.moves {
             let empty_pos = board.empty_cell_pos();
-            let first_position = position_after_move((empty_pos.0 as i16, empty_pos.1 as i16), first_move);
+            let first_position =
+                position_after_move((empty_pos.0 as i16, empty_pos.1 as i16), first_move);
             if !is_inside_board(first_position, board) {
                 // cannot execute move
                 continue;
@@ -111,7 +116,12 @@ mod test {
         board.exec_move(BoardMove::Up);
         board.exec_move(BoardMove::Left);
 
-        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_order = vec![
+            BoardMove::Up,
+            BoardMove::Left,
+            BoardMove::Down,
+            BoardMove::Right,
+        ];
         let move_generator = MoveGenerator::new(move_order);
 
         let next_moves = move_generator.generate_moves(&board, None);
@@ -129,7 +139,12 @@ mod test {
         board.exec_move(BoardMove::Up);
         board.exec_move(BoardMove::Left);
 
-        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_order = vec![
+            BoardMove::Up,
+            BoardMove::Left,
+            BoardMove::Down,
+            BoardMove::Right,
+        ];
         let move_generator = MoveGenerator::new(move_order);
 
         let next_moves = move_generator.generate_moves(&board, None);
@@ -151,13 +166,19 @@ mod test {
 
         let all_moves = [Up, Down, Left, Right];
 
-        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_order = vec![
+            BoardMove::Up,
+            BoardMove::Left,
+            BoardMove::Down,
+            BoardMove::Right,
+        ];
         let move_generator = MoveGenerator::new(move_order);
 
         for path_move in path {
             board.exec_move(path_move);
 
-            let next_moves: Vec<_> = move_generator.generate_moves(&board, None)
+            let next_moves: Vec<_> = move_generator
+                .generate_moves(&board, None)
                 .into_iter()
                 .map(|m| match m {
                     MoveSequence::Single(x) => x,
@@ -185,7 +206,12 @@ mod test {
 
         let all_moves = [Up, Down, Left, Right];
 
-        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_order = vec![
+            BoardMove::Up,
+            BoardMove::Left,
+            BoardMove::Down,
+            BoardMove::Right,
+        ];
         let move_generator = MoveGenerator::new(move_order);
 
         for path_move in path {

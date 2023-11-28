@@ -41,7 +41,10 @@ impl DFSSolver {
             }
         }
 
-        for next_move in self.move_generator.generate_moves(&self.board, self.current_path.last().copied()) {
+        for next_move in self
+            .move_generator
+            .generate_moves(&self.board, self.current_path.last().copied())
+        {
             self.exec_move_sequence(&next_move);
             if self._call_recursive(current_depth + 1, max_depth).is_ok() {
                 return Ok(());
@@ -134,7 +137,12 @@ pub struct IncrementalDFSSolver {
 
 impl IncrementalDFSSolver {
     pub fn new(board: OwnedBoard) -> Self {
-        let move_order = vec![BoardMove::Up, BoardMove::Left, BoardMove::Down, BoardMove::Right];
+        let move_order = vec![
+            BoardMove::Up,
+            BoardMove::Left,
+            BoardMove::Down,
+            BoardMove::Right,
+        ];
         let move_generator = MoveGenerator::new(move_order);
 
         Self {
