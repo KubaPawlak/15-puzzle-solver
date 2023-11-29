@@ -8,46 +8,23 @@ use crate::solving::movegen::{MoveGenerator, MoveSequence};
 pub struct BFSSolver {
     visited: HashSet<OwnedBoard>,
     move_generator: MoveGenerator,
-    current_path: Vec<BoardMove>,
-    board: OwnedBoard,
+    queue: VecDeque<(OwnedBoard, Vec<BoardMove>)>,
 }
 
 impl BFSSolver {
-    pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
-        Self {
-            board,
+    pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Result<Self, ()> {
+        if !is_solvable(&board) {
+            return Err(());
+        }
+
+        let current_path = Vec::new();
+        let queue = VecDeque::from(vec![(board.clone(), current_path.clone())]);
+
+        Ok(Self {
             visited: HashSet::new(),
             move_generator,
-            current_path: vec![],
-        }
-    }
-
-    fn perform_iteration(&mut self) -> Result<(), ()> {
-        let mut queue = VecDeque::new(); // Use a queue for BFS
-        queue.push_back((self.board.clone(), self.current_path.clone()));
-
-        while let Some((current_board, current_path)) = queue.pop_front() {
-            if current_board.is_solved() {
-                self.board = current_board;
-                self.current_path = current_path;
-                return Ok(());
-            }
-
-            if self.visited.contains(&current_board) {
-                continue;
-            }
-
-            self.visited.insert(current_board.clone());
-
-            for next_move in self.move_generator.generate_moves(&current_board, None) {
-                let mut new_board = current_board.clone();
-                let mut new_path = current_path.clone();
-                self.exec_move_sequence(&mut new_board, &mut new_path, &next_move);
-                queue.push_back((new_board, new_path));
-            }
-        }
-
-        Err(())
+            queue,
+        })
     }
 
     fn exec_move_sequence(
@@ -69,16 +46,42 @@ impl BFSSolver {
             }
         }
     }
+
+    fn bfs_iteration(&mut self) -> Result<Option<Vec<BoardMove>>, ()> {
+        if let Some((current_board, current_path)) = self.queue.pop_front() {
+            if current_board.is_solved() {
+                self.queue.clear();
+                self.queue.push_back((current_board, current_path));
+                return Ok(Some(self.queue.pop_front().unwrap().1));
+            }
+
+            if self.visited.contains(&current_board) {
+                return Ok(None);
+            }
+
+            self.visited.insert(current_board.clone());
+
+            for next_move in self.move_generator.generate_moves(&current_board, None) {
+                let mut new_board = current_board.clone();
+                let mut new_path = current_path.clone();
+                self.exec_move_sequence(&mut new_board, &mut new_path, &next_move);
+                self.queue.push_back((new_board, new_path));
+            }
+
+            Ok(None)
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 impl Solver for BFSSolver {
     fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
-        if !is_solvable(&self.board) {
-            return Err(());
+
+        while let Some(result) = self.bfs_iteration()? {
+            return Ok(result);
         }
 
-        self.perform_iteration()?;
-
-        Ok(self.current_path)
+        Err(())
     }
 }
