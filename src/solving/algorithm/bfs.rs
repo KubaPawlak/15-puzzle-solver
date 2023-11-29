@@ -14,7 +14,7 @@ pub struct BFSSolver {
 impl BFSSolver {
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         let mut queue = VecDeque::new();
-        if is_solvable(&board){
+        if is_solvable(&board) {
             queue.push_back((board, vec![]))
         }
         Self {
@@ -43,7 +43,11 @@ impl BFSSolver {
         }
     }
 
-    fn bfs_iteration(&mut self, current_board: OwnedBoard, current_path:Vec<BoardMove>) -> Option<Vec<BoardMove>> {
+    fn bfs_iteration(
+        &mut self,
+        current_board: OwnedBoard,
+        current_path: Vec<BoardMove>,
+    ) -> Option<Vec<BoardMove>> {
         //let (current_board, current_path) = self.queue.pop_front()?;
         if current_board.is_solved() {
             //self.queue.clear();
@@ -70,7 +74,7 @@ impl BFSSolver {
 
 impl Solver for BFSSolver {
     fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
-        while let Some((board, path))=self.queue.pop_front() {
+        while let Some((board, path)) = self.queue.pop_front() {
             if let Some(result) = self.bfs_iteration(board, path) {
                 return Ok(result);
             }

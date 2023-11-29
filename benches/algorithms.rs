@@ -1,10 +1,10 @@
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 
+use solver::solving::algorithm::bfs::BFSSolver;
 use solver::solving::algorithm::{
     dfs::{DFSSolver, IncrementalDFSSolver},
     Solver,
 };
-use solver::solving::algorithm::bfs::BFSSolver;
 use solver::solving::movegen::MoveGenerator;
 
 mod shared;
