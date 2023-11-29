@@ -1,5 +1,6 @@
 use solver::board::OwnedBoard;
 use solver::solving::algorithm::{dfs::IncrementalDFSSolver, Solver};
+use solver::solving::movegen::MoveGenerator;
 
 mod shared;
 
@@ -13,7 +14,7 @@ fn produces_correct_solution() {
 
     let board: OwnedBoard = board_str.parse().unwrap();
 
-    let solver = IncrementalDFSSolver::new(board);
+    let solver = IncrementalDFSSolver::new(board, MoveGenerator::default());
 
     let solution = solver.solve().expect("Board is unsolvable");
 
@@ -34,7 +35,7 @@ fn produces_shortest_solution() {
 
     let board: OwnedBoard = board_str.parse().unwrap();
 
-    let solver = IncrementalDFSSolver::new(board);
+    let solver = IncrementalDFSSolver::new(board, MoveGenerator::default());
 
     let solution = solver.solve().expect("Board is unsolvable");
 

@@ -39,7 +39,7 @@ impl<'a> Board for SubBoard<'a> {
         (self.rows, self.columns)
     }
 
-    fn at(&self, row: u8, column: u8) -> u8 {
+    fn at(&self, _row: u8, _column: u8) -> u8 {
         todo!()
     }
 
@@ -51,11 +51,11 @@ impl<'a> Board for SubBoard<'a> {
         todo!()
     }
 
-    fn can_move(&self, board_move: BoardMove) -> bool {
+    fn can_move(&self, _board_move: BoardMove) -> bool {
         todo!()
     }
 
-    fn exec_move(&mut self, board_move: BoardMove) {
+    fn exec_move(&mut self, _board_move: BoardMove) {
         todo!()
     }
 }
