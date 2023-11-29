@@ -136,15 +136,7 @@ pub struct IncrementalDFSSolver {
 }
 
 impl IncrementalDFSSolver {
-    pub fn new(board: OwnedBoard) -> Self {
-        let move_order = vec![
-            BoardMove::Up,
-            BoardMove::Left,
-            BoardMove::Down,
-            BoardMove::Right,
-        ];
-        let move_generator = MoveGenerator::new(move_order);
-
+    pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             dfs_solver: DFSSolver::new(board, move_generator),
         }
@@ -205,7 +197,7 @@ mod test {
         let mut solver = DFSSolver {
             board,
             visited,
-            move_generator,
+            move_generator: MoveGenerator::default(),
             current_path: vec![],
         };
         // at this point visited contains all the possible board positions that can be reached from the current state

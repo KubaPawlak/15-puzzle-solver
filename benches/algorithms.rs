@@ -4,6 +4,7 @@ use solver::solving::algorithm::{
     dfs::{DFSSolver, IncrementalDFSSolver},
     Solver,
 };
+use solver::solving::movegen::MoveGenerator;
 
 mod shared;
 
@@ -12,7 +13,7 @@ pub fn solver_algorithms_benchmark(c: &mut Criterion) {
 
     c.bench_function("DFS", |b| {
         b.iter_batched(
-            || DFSSolver::new(black_box(board.clone())),
+            || DFSSolver::new(black_box(board.clone()), MoveGenerator::default()),
             |solver| {
                 let _ = black_box(solver.solve());
             },
@@ -22,7 +23,7 @@ pub fn solver_algorithms_benchmark(c: &mut Criterion) {
 
     c.bench_function("IDFS", |b| {
         b.iter_batched(
-            || IncrementalDFSSolver::new(black_box(board.clone())),
+            || IncrementalDFSSolver::new(black_box(board.clone()), MoveGenerator::default()),
             |solver| {
                 let _ = black_box(solver.solve());
             },
