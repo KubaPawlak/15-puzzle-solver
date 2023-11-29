@@ -70,3 +70,15 @@ impl BFSSolver {
         }
     }
 }
+
+impl Solver for BFSSolver {
+    fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
+        if !is_solvable(&self.board) {
+            return Err(());
+        }
+
+        self.perform_iteration()?;
+
+        Ok(self.current_path)
+    }
+}
