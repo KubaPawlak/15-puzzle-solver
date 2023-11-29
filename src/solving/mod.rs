@@ -3,7 +3,7 @@ use parity::{permuation_parity, required_moves_parity, solved_board_parity};
 use crate::board::Board;
 
 pub mod algorithm;
-mod movegen;
+pub mod movegen;
 mod parity;
 
 fn is_solvable(board: &impl Board) -> bool {
