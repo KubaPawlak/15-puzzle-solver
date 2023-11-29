@@ -5,6 +5,7 @@ use crate::board::Board;
 pub mod algorithm;
 pub mod movegen;
 mod parity;
+mod visited;
 
 fn is_solvable(board: &impl Board) -> bool {
     let (rows, columns) = board.dimensions();
