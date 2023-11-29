@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::sync::{Arc, RwLock};
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct VisitedPositions<T: Board + Eq + Hash> {
     visited_states: Arc<RwLock<HashSet<T>>>,
 }

@@ -6,7 +6,6 @@ pub use sub_board::SubBoard;
 mod owned;
 mod parsing;
 mod sub_board;
-mod visited;
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
