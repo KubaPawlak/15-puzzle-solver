@@ -37,7 +37,9 @@ impl Heuristic for ManhattanDistance {
 }
 
 #[derive(Default)]
-pub struct LinearConflict;
+pub struct LinearConflict {
+    manhattan_distance: ManhattanDistance,
+}
 
 impl Heuristic for LinearConflict {
     fn evaluate(&self, board: &dyn Board) -> u64 {
@@ -66,19 +68,7 @@ impl Heuristic for LinearConflict {
             }
         }
 
-        conflicts * 2 // for each conflict we need at least 2 moves
-    }
-}
-
-#[derive(Default)]
-struct LinearConflictsPlusMD {
-    linear_conflict: LinearConflict,
-    manhattan_distance: ManhattanDistance,
-}
-
-impl Heuristic for LinearConflictsPlusMD {
-    fn evaluate(&self, board: &dyn Board) -> u64 {
-        self.linear_conflict.evaluate(board) + self.manhattan_distance.evaluate(board)
+        self.manhattan_distance.evaluate(board) + conflicts * 2 // for each conflict we need at least 2 moves
     }
 }
 
@@ -103,7 +93,7 @@ impl InversionDistanceCache {
         let mut column_first_order = vec![];
         for c in 0..columns {
             for r in 0..rows {
-                column_first_order.push(r * rows + c);
+                column_first_order.push(r * rows + c + 1);
             }
         }
 
@@ -214,10 +204,11 @@ mod tests {
     use super::*;
 
     fn create_board() -> OwnedBoard {
-        let board_str = r#"3 3
-1 2 3
-0 4 6
-7 5 8
+        let board_str = r#"4 4
+2  7  3  4
+1  0  10 8
+5  6  12 15
+9 13  14 11
 "#;
         board_str.parse::<OwnedBoard>().unwrap()
     }
@@ -246,7 +237,7 @@ mod tests {
 
     #[test]
     fn linear_conflict_is_admissible() {
-        let heuristic = LinearConflict;
+        let heuristic = LinearConflict::default();
         heuristic_calculates_lower_bound_on_required_moves(&heuristic);
     }
 
