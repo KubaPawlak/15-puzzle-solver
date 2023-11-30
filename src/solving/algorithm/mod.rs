@@ -1,5 +1,6 @@
 use crate::board::BoardMove;
 
+pub mod astar;
 pub mod bfs;
 pub mod dfs;
 mod heuristics;
