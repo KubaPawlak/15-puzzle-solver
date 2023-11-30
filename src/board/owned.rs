@@ -1,6 +1,6 @@
 use super::{Board, BoardMove, SubBoard};
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct OwnedBoard {
     pub(super) rows: u8,
     pub(super) columns: u8,

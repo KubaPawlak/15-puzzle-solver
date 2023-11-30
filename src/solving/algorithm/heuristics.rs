@@ -200,6 +200,7 @@ mod tests {
     use crate::board::OwnedBoard;
     use crate::solving::algorithm::dfs::IncrementalDFSSolver;
     use crate::solving::algorithm::Solver;
+    use crate::solving::movegen::MoveGenerator;
 
     use super::*;
 
@@ -217,7 +218,7 @@ mod tests {
         let mut board = create_board();
 
         let solution = {
-            let solver = IncrementalDFSSolver::new(board.clone());
+            let solver = IncrementalDFSSolver::new(board.clone(), MoveGenerator::default());
             solver.solve().expect("Test board must be solvable")
         };
 

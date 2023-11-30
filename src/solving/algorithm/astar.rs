@@ -121,3 +121,72 @@ impl Solver for AStarSolver {
         Err(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::solving::algorithm::heuristics;
+
+    use super::*;
+
+    #[test]
+    fn board_with_lower_heuristic_gets_searched_first() {
+        let simple_board: OwnedBoard = r#"4 4
+1 2 3 4
+5 6 7 8
+9 10 11 12
+13 14 0 15"#
+            .parse()
+            .unwrap();
+        let mut worse_board = simple_board.clone();
+        worse_board.exec_move(BoardMove::Up);
+
+        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
+        let mut heap = BinaryHeap::new();
+        heap.push(SearchNode {
+            board: simple_board.clone(),
+            path: vec![],
+            heuristic: Rc::clone(&heuristic),
+        });
+        heap.push(SearchNode {
+            board: worse_board.clone(),
+            path: vec![],
+            heuristic: Rc::clone(&heuristic),
+        });
+
+        assert_eq!(
+            simple_board,
+            heap.pop().expect("Heap should not be empty").board
+        );
+        assert_eq!(
+            worse_board,
+            heap.pop().expect("Heap should not be empty").board
+        );
+    }
+
+    #[test]
+    fn board_with_shorter_path_gets_searched_first() {
+        let board: OwnedBoard = r#"4 4
+1 2 3 4
+5 6 7 8
+9 10 11 12
+13 14 0 15"#
+            .parse()
+            .unwrap();
+
+        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
+        let mut heap = BinaryHeap::new();
+        heap.push(SearchNode {
+            board: board.clone(),
+            path: vec![],
+            heuristic: Rc::clone(&heuristic),
+        });
+        heap.push(SearchNode {
+            board: board.clone(),
+            path: vec![BoardMove::Up],
+            heuristic: Rc::clone(&heuristic),
+        });
+
+        assert_eq!(0, heap.pop().expect("Heap should not be empty").path.len());
+        assert_eq!(1, heap.pop().expect("Heap should not be empty").path.len());
+    }
+}
