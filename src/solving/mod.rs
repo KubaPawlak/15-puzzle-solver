@@ -3,8 +3,9 @@ use parity::{permuation_parity, required_moves_parity, solved_board_parity};
 use crate::board::Board;
 
 pub mod algorithm;
-mod movegen;
+pub mod movegen;
 mod parity;
+mod visited;
 
 fn is_solvable(board: &impl Board) -> bool {
     let (rows, columns) = board.dimensions();

@@ -1,5 +1,6 @@
 use solver::board::OwnedBoard;
 use solver::solving::algorithm::{dfs::DFSSolver, Solver};
+use solver::solving::movegen::MoveGenerator;
 
 mod shared;
 
@@ -13,7 +14,7 @@ fn produces_correct_solution() {
 
     let board: OwnedBoard = board_str.parse().unwrap();
 
-    let solver = DFSSolver::new(board);
+    let solver = DFSSolver::new(board, MoveGenerator::default());
 
     let solution = solver.solve().expect("Board is unsolvable");
 
