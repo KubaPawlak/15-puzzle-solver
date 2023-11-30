@@ -204,3 +204,55 @@ impl Heuristic for InversionDistance {
         vertical + horizontal
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::board::OwnedBoard;
+    use crate::solving::algorithm::dfs::IncrementalDFSSolver;
+    use crate::solving::algorithm::Solver;
+
+    use super::*;
+
+    fn create_board() -> OwnedBoard {
+        let board_str = r#"3 3
+1 2 3
+0 4 6
+7 5 8
+"#;
+        board_str.parse::<OwnedBoard>().unwrap()
+    }
+
+    fn heuristic_calculates_lower_bound_on_required_moves(heuristic: &dyn Heuristic) {
+        let mut board = create_board();
+
+        let solution = {
+            let solver = IncrementalDFSSolver::new(board.clone());
+            solver.solve().expect("Test board must be solvable")
+        };
+
+        for i in 0..solution.len() {
+            let remaining_moves = (solution.len() - i) as u64;
+            let heuristic = heuristic.evaluate(&board);
+            assert!(heuristic >= remaining_moves);
+            board.exec_move(solution[i]);
+        }
+    }
+
+    #[test]
+    fn manhattan_distance_is_admissible() {
+        let heuristic = ManhattanDistance;
+        heuristic_calculates_lower_bound_on_required_moves(&heuristic);
+    }
+
+    #[test]
+    fn linear_conflict_is_admissible() {
+        let heuristic = LinearConflict;
+        heuristic_calculates_lower_bound_on_required_moves(&heuristic);
+    }
+
+    #[test]
+    fn inversion_distance_is_admissible() {
+        let heuristic = InversionDistance::default();
+        heuristic_calculates_lower_bound_on_required_moves(&heuristic);
+    }
+}
