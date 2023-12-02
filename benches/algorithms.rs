@@ -13,7 +13,12 @@ pub fn solver_algorithms_benchmark(c: &mut Criterion) {
 
     c.bench_function("DFS", |b| {
         b.iter_batched(
-            || DFSSolver::new(black_box(board.clone()), MoveGenerator::default()),
+            || {
+                Box::new(DFSSolver::new(
+                    black_box(board.clone()),
+                    MoveGenerator::default(),
+                ))
+            },
             |solver| {
                 let _ = black_box(solver.solve());
             },
@@ -23,7 +28,12 @@ pub fn solver_algorithms_benchmark(c: &mut Criterion) {
 
     c.bench_function("IDFS", |b| {
         b.iter_batched(
-            || IncrementalDFSSolver::new(black_box(board.clone()), MoveGenerator::default()),
+            || {
+                Box::new(IncrementalDFSSolver::new(
+                    black_box(board.clone()),
+                    MoveGenerator::default(),
+                ))
+            },
             |solver| {
                 let _ = black_box(solver.solve());
             },
