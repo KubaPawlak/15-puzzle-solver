@@ -108,5 +108,23 @@ fn create_solver(config: CliArgs, board: OwnedBoard) -> Box<dyn Solver> {
 fn main() {
     let cli = CliArgs::parse();
 
-    dbg!(cli);
+    let board = match OwnedBoard::try_from_iter(
+        std::io::stdin()
+            .lines()
+            .map(|l| l.expect("Stdin must be valid UTF-8")),
+    ) {
+        Ok(board) => board,
+        Err(e) => {
+            eprintln!("{e}");
+            std::process::exit(1);
+        }
+    };
+
+    let solver = create_solver(cli, board);
+
+    let solution = solver.solve().unwrap_or_default();
+
+    println!("{}", solution.len());
+    let solution_str: Vec<_> = solution.iter().map(|x| x.to_string()).collect();
+    println!("{}", solution_str.join(""));
 }
