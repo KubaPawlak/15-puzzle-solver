@@ -1,11 +1,9 @@
 use std::fmt::{Display, Formatter};
 
 pub use owned::OwnedBoard;
-pub use sub_board::SubBoard;
 
 mod owned;
 mod parsing;
-mod sub_board;
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
