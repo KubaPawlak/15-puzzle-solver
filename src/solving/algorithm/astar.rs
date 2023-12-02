@@ -56,9 +56,9 @@ pub struct AStarSolver {
 }
 
 impl AStarSolver {
-    pub fn new(board: OwnedBoard, heuristic: impl Heuristic + 'static) -> Self {
+    pub fn new(board: OwnedBoard, heuristic: Box<dyn Heuristic>) -> Self {
         let mut queue = BinaryHeap::new();
-        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristic);
+        let heuristic: Rc<dyn Heuristic> = Rc::from(heuristic);
         if is_solvable(&board) {
             queue.push(SearchNode {
                 board,
