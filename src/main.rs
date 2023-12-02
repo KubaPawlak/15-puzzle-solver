@@ -1,7 +1,8 @@
 use clap::Parser;
 
-use solver::board::BoardMove;
+use solver::board::{BoardMove, OwnedBoard};
 use solver::solving::algorithm::heuristics::{self, Heuristic};
+use solver::solving::algorithm::Solver;
 use solver::solving::movegen::SearchOrder;
 
 fn parse_search_order(s: &str) -> Result<SearchOrder, String> {
@@ -53,7 +54,7 @@ fn parse_heuristic(heuristic_id: &str) -> Result<Box<dyn Heuristic>, String> {
     }
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Clone, Debug)]
 #[group(required = true, multiple = false)]
 #[clap(disable_help_flag = true)]
 #[command(about, arg_required_else_help = true)]
@@ -77,7 +78,35 @@ struct CliArgs {
     sma: Option<String>,
 }
 
+fn create_solver(config: CliArgs, board: OwnedBoard) -> Box<dyn Solver> {
+    use solver::solving::algorithm::solvers::*;
+    use solver::solving::movegen::MoveGenerator;
+
+    if let Some(order) = config.bfs {
+        Box::new(BFSSolver::new(board, MoveGenerator::new(order)))
+    } else if let Some(order) = config.dfs {
+        Box::new(DFSSolver::new(board, MoveGenerator::new(order)))
+    } else if let Some(order) = config.idfs {
+        Box::new(IncrementalDFSSolver::new(board, MoveGenerator::new(order)))
+    } else if let Some(heuristic_id) = &config.best_first {
+        let _heuristic = parse_heuristic(heuristic_id)
+            .expect("Parser should fail if heuristic id was incorrect");
+        todo!("Best-first search is not implemented yet")
+    } else if let Some(heuristic_id) = &config.astar {
+        let heuristic = parse_heuristic(heuristic_id)
+            .expect("Parser should fail if heuristic id was incorrect");
+        Box::new(AStarSolver::new(board, heuristic))
+    } else if let Some(heuristic_id) = &config.sma {
+        let _heuristic = parse_heuristic(heuristic_id)
+            .expect("Parser should fail if heuristic id was incorrect");
+        todo!("SMA* is not implemented yet")
+    } else {
+        unreachable!("Parser should fail if none of the options are selected")
+    }
+}
+
 fn main() {
     let cli = CliArgs::parse();
+
     dbg!(cli);
 }
