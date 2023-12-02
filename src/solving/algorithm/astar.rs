@@ -44,6 +44,11 @@ impl Ord for SearchNode {
     }
 }
 
+// OPTIMALITY
+//
+// This A* solver requires the heuristic to only be *admissible*,
+// as it does the search on a tree, not a graph.
+// As a consequence, it cannot implement search tree pruning in a simple way
 pub struct AStarSolver {
     heuristic: Rc<dyn Heuristic>,
     queue: BinaryHeap<SearchNode>,
