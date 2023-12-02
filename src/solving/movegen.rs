@@ -2,25 +2,32 @@ use crate::board::{Board, BoardMove};
 use crate::solving::parity;
 use crate::solving::parity::Parity;
 
+#[derive(Clone, Debug)]
 pub enum MoveSequence {
     Single(BoardMove),
     Double(BoardMove, BoardMove),
 }
 
+#[derive(Clone, Debug)]
+pub enum SearchOrder {
+    Provided([BoardMove; 4]),
+    Random,
+}
+
 pub struct MoveGenerator {
-    moves: [BoardMove; 4],
+    search_order: SearchOrder,
 }
 
 impl Default for MoveGenerator {
     fn default() -> Self {
         use crate::board::BoardMove::*;
-        Self::new([Up, Down, Left, Right])
+        Self::new(SearchOrder::Provided([Up, Down, Left, Right]))
     }
 }
 
 impl MoveGenerator {
-    pub fn new(moves: [BoardMove; 4]) -> Self {
-        MoveGenerator { moves }
+    pub fn new(search_order: SearchOrder) -> Self {
+        MoveGenerator { search_order }
     }
 
     pub fn generate_moves(
@@ -32,7 +39,12 @@ impl MoveGenerator {
 
         let generate_single_move = parity::required_moves_parity(board) == Parity::Odd;
 
-        for first_move in self.moves {
+        let search_order = match self.search_order {
+            SearchOrder::Provided(order) => order,
+            SearchOrder::Random => todo!("Handle random move generation"),
+        };
+
+        for first_move in search_order {
             let empty_pos = board.empty_cell_pos();
             let first_position =
                 position_after_move((empty_pos.0 as i16, empty_pos.1 as i16), first_move);
@@ -50,7 +62,7 @@ impl MoveGenerator {
             if generate_single_move {
                 next_moves.push(MoveSequence::Single(first_move))
             } else {
-                for second_move in self.moves {
+                for second_move in search_order {
                     let second_position = position_after_move(first_position, second_move);
                     if !is_inside_board(second_position, board) {
                         // second move is impossible to execute
