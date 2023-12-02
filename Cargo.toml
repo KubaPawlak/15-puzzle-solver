@@ -16,6 +16,7 @@ stack-expansion = []
 [dependencies]
 bit-set = "0.5"
 stacker = "0.1"
+clap = {version = "4", features = ["derive"]}
 
 [dev-dependencies]
 criterion = "0.5"
