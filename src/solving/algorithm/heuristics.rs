@@ -20,14 +20,21 @@ fn manhattan_distance((r1, c1): (u8, u8), (r2, c2): (u8, u8)) -> u64 {
 impl Heuristic for ManhattanDistance {
     fn evaluate(&self, board: &dyn Board) -> u64 {
         let (rows, columns) = board.dimensions();
-        let target_position = |cell: u8| (cell / rows, cell % columns);
+        let target_position = |cell: u8| {
+            if cell == 0 {
+                (rows - 1, columns - 1)
+            } else {
+                ((cell - 1) / rows, (cell - 1) % columns)
+            }
+        };
 
         let mut total_distance = 0;
 
         for row in 0..rows {
             for column in 0..columns {
                 let value = board.at(row, column);
-                let distance = manhattan_distance((row, column), target_position(value));
+                let target = target_position(value);
+                let distance = manhattan_distance((row, column), target);
                 total_distance += distance;
             }
         }
