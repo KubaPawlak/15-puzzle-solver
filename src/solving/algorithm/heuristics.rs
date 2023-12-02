@@ -225,7 +225,10 @@ mod tests {
         let mut board = create_board();
 
         let solution = {
-            let solver = IncrementalDFSSolver::new(board.clone(), MoveGenerator::default());
+            let solver = Box::new(IncrementalDFSSolver::new(
+                board.clone(),
+                MoveGenerator::default(),
+            ));
             solver.solve().expect("Test board must be solvable")
         };
 

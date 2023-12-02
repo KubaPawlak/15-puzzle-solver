@@ -13,5 +13,5 @@ pub mod solvers {
 }
 
 pub trait Solver {
-    fn solve(self) -> Result<Vec<BoardMove>, ()>;
+    fn solve(self: Box<Self>) -> Result<Vec<BoardMove>, ()>;
 }

@@ -117,7 +117,7 @@ impl AStarSolver {
 }
 
 impl Solver for AStarSolver {
-    fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
         while let Some(node) = self.queue.pop() {
             if let Some(result) = self.visit_node(node) {
                 return Ok(result);

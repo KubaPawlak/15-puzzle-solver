@@ -34,7 +34,7 @@ pub fn assert_produces_valid_solution<S: Solver>(mut solver_builder: impl FnMut(
     let test_data = generate_test_data();
 
     for (board, _shortest_solution) in test_data {
-        let solver = solver_builder(board.clone());
+        let solver = Box::new(solver_builder(board.clone()));
         let solution = solver.solve().expect("board should be solvable");
 
         eprintln!("Solution length {}", solution.len());
@@ -50,7 +50,7 @@ pub fn assert_produces_shortest_solution<S: Solver>(
     let test_data = generate_test_data();
 
     for (board, shortest_solution) in test_data {
-        let solver = solver_builder(board.clone());
+        let solver = Box::new(solver_builder(board.clone()));
         let solution = solver.solve().expect("board should be solvable");
 
         eprintln!("Solution length {}", solution.len());

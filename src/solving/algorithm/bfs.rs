@@ -72,7 +72,7 @@ impl BFSSolver {
 }
 
 impl Solver for BFSSolver {
-    fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
         if !is_solvable(&self.board) {
             return Err(());
         }

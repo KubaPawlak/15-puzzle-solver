@@ -119,7 +119,7 @@ impl DFSSolver {
 }
 
 impl Solver for DFSSolver {
-    fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
         if !is_solvable(&self.board) {
             return Err(());
         }
@@ -144,7 +144,7 @@ impl IncrementalDFSSolver {
 }
 
 impl Solver for IncrementalDFSSolver {
-    fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
         if !is_solvable(&self.dfs_solver.board) {
             return Err(());
         }
