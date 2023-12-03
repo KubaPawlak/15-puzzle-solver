@@ -6,9 +6,32 @@ repository = "https://github.com/KubaPawlak/15-puzzle-solver"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bench]]
+name = "algorithms"
+harness = false
+
+[[bench]]
+name = "extensive"
+harness = false
+
+[features]
+stack-expansion = []
 
 [dependencies]
+bit-set = "0.5"
+stacker = "0.1"
+clap = {version = "4", features = ["derive"]}
+log = {version = "0.4", features = ["release_max_level_info"]}
+simple_logger = {version = "4", features = ["colors", "stderr", "timestamps"]}
+time = "0.3"
+
+
+[dev-dependencies]
+criterion = "0.5"
+itertools = "0.12"
+
+[lints.rust]
+private_interfaces = "deny"
 
 [lints.clippy]
 correctness = "deny"
