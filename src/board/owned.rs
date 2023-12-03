@@ -10,7 +10,7 @@ pub struct OwnedBoard {
 impl OwnedBoard {
     /// Convert 2D representation of cell coordinate to a single index in the underlying vec
     fn flatten_index(&self, row: u8, column: u8) -> usize {
-        row as usize * self.rows as usize + column as usize
+        row as usize * self.columns as usize + column as usize
     }
 }
 
