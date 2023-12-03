@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::board::Board;
 use std::collections::HashSet;
 use std::hash::Hash;

@@ -40,7 +40,7 @@ impl Add for Parity {
     }
 }
 
-pub fn permuation_parity<T: Into<usize> + Copy>(permutation: &[T]) -> Parity {
+pub fn permutation_parity<T: Into<usize> + Copy>(permutation: &[T]) -> Parity {
     let mut visited = bit_set::BitSet::with_capacity(permutation.len());
     let mut cycle_lengths = vec![];
 
@@ -99,13 +99,13 @@ mod test {
     #[test]
     fn odd_permutation_has_odd_parity() {
         let odd_permutation = [2u8, 3, 4, 1, 0];
-        assert_eq!(Parity::Odd, permuation_parity(&odd_permutation));
+        assert_eq!(Parity::Odd, permutation_parity(&odd_permutation));
     }
 
     #[test]
     fn even_permutation_has_even_parity() {
         let even_permutation = [0u8, 1, 4, 2, 3];
-        assert_eq!(Parity::Even, permuation_parity(&even_permutation));
+        assert_eq!(Parity::Even, permutation_parity(&even_permutation));
     }
 
     mod solved_board_has_inverse_parity_to_its_size {
@@ -117,7 +117,7 @@ mod test {
 
             let inverse_parity = Parity::from(board_size).opposite();
 
-            assert_eq!(inverse_parity, permuation_parity(&board_cells));
+            assert_eq!(inverse_parity, permutation_parity(&board_cells));
         }
 
         macro_rules! test_cases {

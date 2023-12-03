@@ -1,4 +1,4 @@
-use parity::{permuation_parity, required_moves_parity, solved_board_parity};
+use parity::{permutation_parity, required_moves_parity, solved_board_parity};
 
 use crate::board::Board;
 
@@ -17,7 +17,7 @@ fn is_solvable(board: &impl Board) -> bool {
         }
     }
 
-    let board_parity = permuation_parity(&cells);
+    let board_parity = permutation_parity(&cells);
 
     let solved_board_parity = solved_board_parity(board);
 
