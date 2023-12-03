@@ -77,6 +77,7 @@ impl DFSSolver {
             if let Some(remaining) = stacker::remaining_stack() {
                 // If we have less than `STACK_RED_ZONE` stack remaining, we must backtrack to avoid stack overflow
                 if remaining < STACK_RED_ZONE {
+                    log::debug!("DFS reached stack limit at depth {current_depth}, backtracking");
                     return Err(());
                 }
             }
@@ -156,6 +157,7 @@ impl Solver for IncrementalDFSSolver {
             .is_err()
         {
             max_depth += 1;
+            log::trace!("Increasing DFS depth to {max_depth}");
             self.dfs_solver.visited.clear();
         }
 

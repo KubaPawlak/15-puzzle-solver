@@ -119,6 +119,7 @@ impl AStarSolver {
 impl Solver for AStarSolver {
     fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
         while let Some(node) = self.queue.pop() {
+            log::trace!("Evaluating position with f-cost {}", node.heuristic());
             if let Some(result) = self.visit_node(node) {
                 return Ok(result);
             }
