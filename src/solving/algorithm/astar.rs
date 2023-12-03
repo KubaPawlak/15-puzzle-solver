@@ -16,8 +16,12 @@ struct SearchNode {
 }
 
 impl SearchNode {
-    fn heuristic(&self) -> u64 {
-        self.heuristic.evaluate(&self.board) + self.path.len() as u64
+    fn h_cost(&self) -> u64 {
+        self.heuristic.evaluate(&self.board)
+    }
+
+    fn f_cost(&self) -> u64 {
+        self.h_cost() + self.path.len() as u64
     }
 }
 
