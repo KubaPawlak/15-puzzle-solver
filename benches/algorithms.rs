@@ -68,6 +68,21 @@ pub fn solver_algorithms_benchmark(c: &mut Criterion) {
             BatchSize::SmallInput,
         )
     });
+
+    c.bench_function("IDA*", |b| {
+        b.iter_batched(
+            || {
+                Box::new(IterativeAStarSolver::new(
+                    black_box(boards.next().unwrap()),
+                    Box::<ManhattanDistance>::default(),
+                ))
+            },
+            |solver| {
+                let _ = black_box(solver.solve());
+            },
+            BatchSize::SmallInput,
+        )
+    });
 }
 
 criterion_group!(algorithm_benchmarks, solver_algorithms_benchmark);
