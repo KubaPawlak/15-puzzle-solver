@@ -10,6 +10,10 @@ edition = "2021"
 name = "algorithms"
 harness = false
 
+[[bench]]
+name = "extensive"
+harness = false
+
 [features]
 stack-expansion = []
 
@@ -20,6 +24,7 @@ clap = {version = "4", features = ["derive"]}
 
 [dev-dependencies]
 criterion = "0.5"
+itertools = "0.12"
 
 [lints.rust]
 private_interfaces = "deny"

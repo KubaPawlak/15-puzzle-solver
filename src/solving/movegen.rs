@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::board::{Board, BoardMove};
 use crate::solving::parity;
 use crate::solving::parity::Parity;
@@ -12,6 +14,25 @@ pub enum MoveSequence {
 pub enum SearchOrder {
     Provided([BoardMove; 4]),
     Random,
+}
+
+impl Display for SearchOrder {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SearchOrder::Provided(order) => {
+                for m in order {
+                    match m {
+                        BoardMove::Up => write!(f, "U"),
+                        BoardMove::Down => write!(f, "D"),
+                        BoardMove::Left => write!(f, "L"),
+                        BoardMove::Right => write!(f, "R"),
+                    }?
+                }
+            }
+            SearchOrder::Random => write!(f, "Random")?,
+        };
+        Ok(())
+    }
 }
 
 pub struct MoveGenerator {
