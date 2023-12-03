@@ -21,6 +21,10 @@ stack-expansion = []
 bit-set = "0.5"
 stacker = "0.1"
 clap = {version = "4", features = ["derive"]}
+log = {version = "0.4", features = ["release_max_level_info"]}
+simple_logger = {version = "4", features = ["colors", "stderr", "timestamps"]}
+time = "0.3"
+
 
 [dev-dependencies]
 criterion = "0.5"

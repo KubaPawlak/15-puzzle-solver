@@ -1,4 +1,5 @@
 use clap::Parser;
+use log::LevelFilter;
 
 use solver::board::{BoardMove, OwnedBoard};
 use solver::solving::algorithm::heuristics::{self, Heuristic};
@@ -54,11 +55,20 @@ fn parse_heuristic(heuristic_id: &str) -> Result<Box<dyn Heuristic>, String> {
     }
 }
 
+#[derive(Parser, Debug, Clone)]
+struct CliArgs {
+    #[clap(flatten)]
+    algorithm_info: AlgorithmArgs,
+
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
+}
+
 #[derive(Parser, Clone, Debug)]
 #[group(required = true, multiple = false)]
 #[clap(disable_help_flag = true)]
 #[command(about, arg_required_else_help = true)]
-struct CliArgs {
+struct AlgorithmArgs {
     #[arg(short, long, value_name = "ORDER", value_parser = crate::parse_search_order, help="Breadth-first search")]
     bfs: Option<SearchOrder>,
 
@@ -78,7 +88,7 @@ struct CliArgs {
     sma: Option<String>,
 }
 
-fn create_solver(config: CliArgs, board: OwnedBoard) -> Box<dyn Solver> {
+fn create_solver(config: AlgorithmArgs, board: OwnedBoard) -> Box<dyn Solver> {
     use solver::solving::algorithm::solvers::*;
     use solver::solving::movegen::MoveGenerator;
 
@@ -108,6 +118,21 @@ fn create_solver(config: CliArgs, board: OwnedBoard) -> Box<dyn Solver> {
 fn main() {
     let cli = CliArgs::parse();
 
+    simple_logger::SimpleLogger::new()
+        .with_local_timestamps()
+        .with_timestamp_format(time::macros::format_description!(
+            "[hour]:[minute]:[second]"
+        ))
+        .init()
+        .unwrap();
+
+    log::set_max_level(match cli.verbose {
+        0 => LevelFilter::Error,
+        1 => LevelFilter::Info,
+        2 => LevelFilter::Debug,
+        3.. => LevelFilter::Trace,
+    });
+
     let board = match OwnedBoard::try_from_iter(
         std::io::stdin()
             .lines()
@@ -115,14 +140,18 @@ fn main() {
     ) {
         Ok(board) => board,
         Err(e) => {
-            eprintln!("{e}");
+            log::error!("Error while parsing board: {e}");
             std::process::exit(1);
         }
     };
 
-    let solver = create_solver(cli, board);
+    let solver = create_solver(cli.algorithm_info, board);
+    log::info!("Starting solver");
 
-    let solution = solver.solve().unwrap_or_default();
+    let solution = solver.solve().unwrap_or_else(|_| {
+        log::warn!("Board is unsolvable");
+        Vec::default()
+    });
 
     println!("{}", solution.len());
     let solution_str: Vec<_> = solution.iter().map(|x| x.to_string()).collect();
