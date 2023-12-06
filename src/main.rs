@@ -155,11 +155,14 @@ fn main() {
     let solver = create_solver(cli.algorithm_info, board);
     log::info!("Starting solver");
 
-    let start = time::Instant::now();
+    let start = std::time::Instant::now();
     let result = solver.solve();
     let finish = start.elapsed();
     if result.is_ok() {
-        log::info!("Found solution in {:.3}s", finish.as_seconds_f64())
+        log::info!(
+            "Found solution in {:#}",
+            duration_human::DurationHuman::from(finish)
+        )
     }
     let solution = result.unwrap_or_else(|_| {
         log::warn!("Board is unsolvable");
