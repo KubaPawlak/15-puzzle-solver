@@ -1,6 +1,5 @@
 use solver::board::OwnedBoard;
-use solver::solving::algorithm::{Solver};
-use solver::solving::algorithm::bfs::BFSSolver;
+use solver::solving::algorithm::{bfs::BFSSolver, Solver};
 use solver::solving::movegen::MoveGenerator;
 
 mod shared;

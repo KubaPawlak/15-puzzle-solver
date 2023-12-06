@@ -43,6 +43,8 @@ impl BFSSolver {
         }
     }
 
+    // todo: this function should not take board by-value because it does not consume it.
+    // todo: commented-out code should be removed
     fn bfs_iteration(
         &mut self,
         current_board: OwnedBoard,
