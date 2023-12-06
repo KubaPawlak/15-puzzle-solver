@@ -27,7 +27,7 @@ impl Display for SolvingError {
         match self {
             SolvingError::UnsolvableBoard => write!(f, "Board is unsolvable"),
             SolvingError::AlgorithmError(inner) => {
-                write!(f, "Solving error: {}", inner)
+                write!(f, "Solving error: {inner}")
             }
         }
     }

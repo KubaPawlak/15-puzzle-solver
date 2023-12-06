@@ -95,6 +95,7 @@ fn undo_move_sequence(
 }
 
 impl AStarSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, heuristic: Box<dyn Heuristic>) -> Self {
         let mut queue = BinaryHeap::new();
         let heuristic: Rc<dyn Heuristic> = Rc::from(heuristic);
@@ -103,7 +104,7 @@ impl AStarSolver {
                 board,
                 path: vec![],
                 heuristic: Rc::clone(&heuristic),
-            })
+            });
         }
 
         Self {
@@ -167,6 +168,7 @@ enum IDAStarResult {
 }
 
 impl IterativeAStarSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, heuristic: Box<dyn Heuristic>) -> Self {
         Self {
             board,
@@ -201,7 +203,7 @@ impl IterativeAStarSolver {
                 }
                 (_, _) => {}
             }
-            undo_move_sequence(&mut self.board, &mut self.path, next_move)
+            undo_move_sequence(&mut self.board, &mut self.path, next_move);
         }
         minimum.map_or(IDAStarResult::NotFound, IDAStarResult::Exceeded)
     }

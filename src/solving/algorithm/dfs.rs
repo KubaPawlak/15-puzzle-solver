@@ -45,6 +45,7 @@ impl From<DFSError> for SolvingError {
 }
 
 impl DFSSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             board,
@@ -161,6 +162,7 @@ pub struct IncrementalDFSSolver {
 }
 
 impl IncrementalDFSSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             dfs_solver: DFSSolver::new(board, move_generator),

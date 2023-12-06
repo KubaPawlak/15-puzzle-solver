@@ -177,6 +177,9 @@ fn main() {
     };
 
     println!("{}", solution.len());
-    let solution_str: Vec<_> = solution.iter().map(|x| x.to_string()).collect();
+    let solution_str: Vec<_> = solution
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
     println!("{}", solution_str.join(""));
 }

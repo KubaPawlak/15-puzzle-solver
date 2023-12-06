@@ -12,10 +12,11 @@ pub struct BFSSolver {
 }
 
 impl BFSSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         let mut queue = VecDeque::new();
         if is_solvable(&board) {
-            queue.push_back((board, vec![]))
+            queue.push_back((board, vec![]));
         }
         Self {
             visited: HashSet::new(),
