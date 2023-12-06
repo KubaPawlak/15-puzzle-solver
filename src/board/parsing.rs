@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
@@ -10,12 +11,19 @@ impl FromStr for OwnedBoard {
     type Err = BoardCreationError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines = s.lines();
+        let lines = s.lines();
+        Self::try_from_iter(lines)
+    }
+}
 
+impl OwnedBoard {
+    pub fn try_from_iter<I: Borrow<str>>(
+        mut lines: impl Iterator<Item = I>,
+    ) -> Result<Self, BoardCreationError> {
         let (rows, columns) = {
-            let first_line = lines
-                .next()
-                .ok_or(BoardCreationError::InvalidHeader)?
+            let first_line_raw = lines.next().ok_or(BoardCreationError::InvalidHeader)?;
+            let first_line = first_line_raw
+                .borrow()
                 .split_whitespace()
                 .collect::<Vec<_>>();
 
@@ -36,9 +44,10 @@ impl FromStr for OwnedBoard {
         let mut row_count: usize = 0;
         for (board_row, input_line) in cells
             .chunks_mut(columns as usize)
-            .zip(lines.take(rows as usize))
+            .zip(lines.take(rows as usize).by_ref())
         {
             let values: Vec<u8> = input_line
+                .borrow()
                 .split_whitespace()
                 .take(columns as usize)
                 .map(str::parse)

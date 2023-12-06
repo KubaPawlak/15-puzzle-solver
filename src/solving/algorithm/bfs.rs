@@ -75,7 +75,7 @@ impl BFSSolver {
 }
 
 impl Solver for BFSSolver {
-    fn solve(mut self) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
         while let Some((board, path)) = self.queue.pop_front() {
             if let Some(result) = self.bfs_iteration(board, path) {
                 return Ok(result);

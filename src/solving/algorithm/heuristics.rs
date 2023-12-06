@@ -17,23 +17,23 @@ fn manhattan_distance((r1, c1): (u8, u8), (r2, c2): (u8, u8)) -> u64 {
     row_distance as u64 + column_distance as u64
 }
 
+fn nonzero_cell_expected_pos(cell: u8, (rows, columns): (u8, u8)) -> (u8, u8) {
+    ((cell - 1) / rows, (cell - 1) % columns)
+}
+
 impl Heuristic for ManhattanDistance {
     fn evaluate(&self, board: &dyn Board) -> u64 {
         let (rows, columns) = board.dimensions();
-        let target_position = |cell: u8| {
-            if cell == 0 {
-                (rows - 1, columns - 1)
-            } else {
-                ((cell - 1) / rows, (cell - 1) % columns)
-            }
-        };
 
         let mut total_distance = 0;
 
         for row in 0..rows {
             for column in 0..columns {
                 let value = board.at(row, column);
-                let target = target_position(value);
+                if value == 0 {
+                    continue;
+                }
+                let target = nonzero_cell_expected_pos(value, (rows, columns));
                 let distance = manhattan_distance((row, column), target);
                 total_distance += distance;
             }
@@ -53,11 +53,21 @@ impl Heuristic for LinearConflict {
         let (rows, columns) = board.dimensions();
         let mut conflicts = 0;
 
+        let expected_pos = |cell: u8| nonzero_cell_expected_pos(cell, (rows, columns));
+
         // calculate row conflicts
         for row in 0..rows {
             for first_column in 0..(columns - 1) {
                 for second_column in (first_column + 1)..columns {
-                    if board.at(row, first_column) > board.at(row, second_column) {
+                    let first_cell = board.at(row, first_column);
+                    let second_cell = board.at(row, second_column);
+                    if first_cell == 0 || second_cell == 0 {
+                        continue;
+                    }
+                    if expected_pos(first_cell).0 != row || expected_pos(second_cell).0 != row {
+                        continue;
+                    }
+                    if first_cell > second_cell {
                         conflicts += 1;
                     }
                 }
@@ -68,7 +78,16 @@ impl Heuristic for LinearConflict {
         for column in 0..columns {
             for first_row in 0..(rows - 1) {
                 for second_row in (first_row + 1)..rows {
-                    if board.at(first_row, column) > board.at(second_row, column) {
+                    let first_cell = board.at(first_row, column);
+                    let second_cell = board.at(second_row, column);
+                    if first_cell == 0 || second_cell == 0 {
+                        continue;
+                    }
+                    if expected_pos(first_cell).1 != column || expected_pos(second_cell).1 != column
+                    {
+                        continue;
+                    }
+                    if first_cell > second_cell {
                         conflicts += 1;
                     }
                 }
@@ -225,14 +244,17 @@ mod tests {
         let mut board = create_board();
 
         let solution = {
-            let solver = IncrementalDFSSolver::new(board.clone(), MoveGenerator::default());
+            let solver = Box::new(IncrementalDFSSolver::new(
+                board.clone(),
+                MoveGenerator::default(),
+            ));
             solver.solve().expect("Test board must be solvable")
         };
 
         for i in 0..solution.len() {
             let remaining_moves = (solution.len() - i) as u64;
-            let heuristic = heuristic.evaluate(&board);
-            assert!(heuristic >= remaining_moves);
+            let lower_bound = heuristic.evaluate(&board);
+            assert!(lower_bound <= remaining_moves);
             board.exec_move(solution[i]);
         }
     }

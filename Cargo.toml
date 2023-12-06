@@ -10,15 +10,25 @@ edition = "2021"
 name = "algorithms"
 harness = false
 
+[[bench]]
+name = "extensive"
+harness = false
+
 [features]
 stack-expansion = []
 
 [dependencies]
 bit-set = "0.5"
 stacker = "0.1"
+clap = {version = "4", features = ["derive"]}
+log = {version = "0.4", features = ["release_max_level_info"]}
+simple_logger = {version = "4", features = ["colors", "stderr", "timestamps"]}
+time = "0.3"
+
 
 [dev-dependencies]
 criterion = "0.5"
+itertools = "0.12"
 
 [lints.rust]
 private_interfaces = "deny"
