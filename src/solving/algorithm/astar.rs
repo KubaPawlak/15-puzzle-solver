@@ -3,7 +3,7 @@ use std::collections::BinaryHeap;
 use std::rc::Rc;
 
 use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::Solver;
+use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
 
@@ -137,7 +137,7 @@ impl AStarSolver {
 }
 
 impl Solver for AStarSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         let mut max_f_cost = 0;
         while let Some(node) = self.queue.pop() {
             let f_cost = node.f_cost();
@@ -149,7 +149,7 @@ impl Solver for AStarSolver {
                 return Ok(result);
             }
         }
-        Err(())
+        Err(SolvingError::UnsolvableBoard)
     }
 }
 
@@ -208,9 +208,9 @@ impl IterativeAStarSolver {
 }
 
 impl Solver for IterativeAStarSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         if !is_solvable(&self.board) {
-            return Err(());
+            return Err(SolvingError::UnsolvableBoard);
         }
         let mut bound = self.heuristic.evaluate(&self.board);
         loop {

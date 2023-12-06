@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+
 use crate::board::BoardMove;
 
 pub mod astar;
@@ -13,6 +16,25 @@ pub mod solvers {
     pub use super::dfs::IncrementalDFSSolver;
 }
 
+#[derive(Debug)]
+pub enum SolvingError {
+    UnsolvableBoard,
+    AlgorithmError(Box<dyn Error>),
+}
+
+impl Display for SolvingError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SolvingError::UnsolvableBoard => write!(f, "Board is unsolvable"),
+            SolvingError::AlgorithmError(inner) => {
+                write!(f, "Solving error: {}", inner)
+            }
+        }
+    }
+}
+
+impl Error for SolvingError {}
+
 pub trait Solver {
-    fn solve(self: Box<Self>) -> Result<Vec<BoardMove>, ()>;
+    fn solve(self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError>;
 }
