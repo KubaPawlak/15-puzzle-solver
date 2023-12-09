@@ -5,7 +5,7 @@ use crate::board::{Board, BoardMove};
 use crate::solving::parity;
 use crate::solving::parity::Parity;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum MoveSequence {
     Single(BoardMove),
     Double(BoardMove, BoardMove),

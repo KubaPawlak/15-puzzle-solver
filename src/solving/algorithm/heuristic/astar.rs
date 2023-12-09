@@ -1,11 +1,13 @@
-use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::heuristic::heuristics::Heuristic;
-use crate::solving::algorithm::{Solver, SolvingError};
-use crate::solving::is_solvable;
-use crate::solving::movegen::{MoveGenerator, MoveSequence};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::rc::Rc;
+
+use crate::board::{Board, BoardMove, OwnedBoard};
+use crate::solving::algorithm::{util, Solver, SolvingError};
+use crate::solving::is_solvable;
+pub use crate::solving::movegen::MoveGenerator;
+
+use super::heuristics::Heuristic;
 
 struct SearchNode {
     board: OwnedBoard,
@@ -54,44 +56,6 @@ pub struct AStarSolver {
     move_generator: MoveGenerator,
 }
 
-fn apply_move_sequence(
-    board: &mut impl Board,
-    path: &mut Vec<BoardMove>,
-    move_sequence: MoveSequence,
-) {
-    match move_sequence {
-        MoveSequence::Single(m) => {
-            board.exec_move(m);
-            path.push(m);
-        }
-        MoveSequence::Double(fst, snd) => {
-            board.exec_move(fst);
-            board.exec_move(snd);
-            path.push(fst);
-            path.push(snd);
-        }
-    }
-}
-
-fn undo_move_sequence(
-    board: &mut impl Board,
-    path: &mut Vec<BoardMove>,
-    move_sequence: MoveSequence,
-) {
-    match move_sequence {
-        MoveSequence::Single(m) => {
-            board.exec_move(m.opposite());
-            path.pop();
-        }
-        MoveSequence::Double(fst, snd) => {
-            board.exec_move(snd.opposite());
-            board.exec_move(fst.opposite());
-            path.pop();
-            path.pop();
-        }
-    }
-}
-
 impl AStarSolver {
     #[must_use]
     pub fn new(board: OwnedBoard, heuristic: Box<dyn Heuristic>) -> Self {
@@ -123,7 +87,7 @@ impl AStarSolver {
         {
             let mut new_board = board.clone();
             let mut new_path = path.clone();
-            apply_move_sequence(&mut new_board, &mut new_path, next_move);
+            util::apply_move_sequence(&mut new_board, &mut new_path, next_move);
             self.queue.push(SearchNode {
                 board: new_board,
                 path: new_path,
@@ -189,7 +153,7 @@ impl IterativeAStarSolver {
             .move_generator
             .generate_moves(&self.board, self.path.last().copied())
         {
-            apply_move_sequence(&mut self.board, &mut self.path, next_move.clone());
+            util::apply_move_sequence(&mut self.board, &mut self.path, next_move);
             let result = self.search(max_f_cost);
             match (minimum, result) {
                 (_, ok @ IDAStarResult::Ok) => return ok,
@@ -201,7 +165,7 @@ impl IterativeAStarSolver {
                 }
                 (_, _) => {}
             }
-            undo_move_sequence(&mut self.board, &mut self.path, next_move);
+            util::undo_move_sequence(&mut self.board, &mut self.path, next_move);
         }
         minimum.map_or(IDAStarResult::NotFound, IDAStarResult::Exceeded)
     }
@@ -229,8 +193,7 @@ impl Solver for IterativeAStarSolver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::solving::algorithm::heuristic;
-    use crate::solving::algorithm::heuristic::astar::SearchNode;
+    use crate::solving::algorithm::heuristic::heuristics;
 
     #[test]
     fn board_with_lower_heuristic_gets_searched_first() {
@@ -244,7 +207,7 @@ mod tests {
         let mut worse_board = simple_board.clone();
         worse_board.exec_move(BoardMove::Up);
 
-        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristic::heuristics::ManhattanDistance);
+        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
         let mut heap = BinaryHeap::new();
         heap.push(SearchNode {
             board: simple_board.clone(),
@@ -277,7 +240,7 @@ mod tests {
             .parse()
             .unwrap();
 
-        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristic::heuristics::ManhattanDistance);
+        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
         let mut heap = BinaryHeap::new();
         heap.push(SearchNode {
             board: board.clone(),

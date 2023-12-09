@@ -125,25 +125,6 @@ fn apply_move_sequence(
     }
 }
 
-fn undo_move_sequence(
-    board: &mut impl Board,
-    path: &mut Vec<BoardMove>,
-    move_sequence: MoveSequence,
-) {
-    match move_sequence {
-        MoveSequence::Single(m) => {
-            board.exec_move(m.opposite());
-            path.pop();
-        }
-        MoveSequence::Double(fst, snd) => {
-            board.exec_move(snd.opposite());
-            board.exec_move(fst.opposite());
-            path.pop();
-            path.pop();
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
