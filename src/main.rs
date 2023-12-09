@@ -3,7 +3,7 @@ use log::LevelFilter;
 
 use solver::board::{BoardMove, OwnedBoard};
 use solver::solving::algorithm::heuristics::{self, Heuristic};
-use solver::solving::algorithm::Solver;
+use solver::solving::algorithm::{Solver, SolvingError};
 use solver::solving::movegen::SearchOrder;
 
 fn parse_search_order(s: &str) -> Result<SearchOrder, String> {
@@ -155,18 +155,31 @@ fn main() {
     let solver = create_solver(cli.algorithm_info, board);
     log::info!("Starting solver");
 
-    let start = time::Instant::now();
-    let result = solver.solve();
+    let start = std::time::Instant::now();
+    let solve_result = solver.solve();
     let finish = start.elapsed();
-    if result.is_ok() {
-        log::info!("Found solution in {:.3}s", finish.as_seconds_f64())
-    }
-    let solution = result.unwrap_or_else(|_| {
-        log::warn!("Board is unsolvable");
-        Vec::default()
-    });
+    let solution = match solve_result {
+        Ok(solution) => {
+            log::info!(
+                "Found solution in {:#}",
+                duration_human::DurationHuman::from(finish)
+            );
+            solution
+        }
+        Err(SolvingError::UnsolvableBoard) => {
+            log::warn!("Board is unsolvable");
+            Vec::default()
+        }
+        Err(SolvingError::AlgorithmError(inner_error)) => {
+            log::error!("Unable to solve board: {}", inner_error);
+            std::process::exit(1);
+        }
+    };
 
     println!("{}", solution.len());
-    let solution_str: Vec<_> = solution.iter().map(|x| x.to_string()).collect();
+    let solution_str: Vec<_> = solution
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
     println!("{}", solution_str.join(""));
 }

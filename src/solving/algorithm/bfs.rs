@@ -1,7 +1,7 @@
 use std::collections::{HashSet, VecDeque};
 
 use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::Solver;
+use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
 
@@ -12,10 +12,11 @@ pub struct BFSSolver {
 }
 
 impl BFSSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         let mut queue = VecDeque::new();
         if is_solvable(&board) {
-            queue.push_back((board, vec![]))
+            queue.push_back((board, vec![]));
         }
         Self {
             visited: HashSet::new(),
@@ -73,12 +74,12 @@ impl BFSSolver {
 }
 
 impl Solver for BFSSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         while let Some((board, path)) = self.queue.pop_front() {
             if let Some(result) = self.bfs_iteration(board, path) {
                 return Ok(result);
             }
         }
-        Err(())
+        Err(SolvingError::UnsolvableBoard)
     }
 }

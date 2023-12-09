@@ -26,7 +26,7 @@ impl Display for SearchOrder {
                         BoardMove::Down => write!(f, "D"),
                         BoardMove::Left => write!(f, "L"),
                         BoardMove::Right => write!(f, "R"),
-                    }?
+                    }?;
                 }
             }
             SearchOrder::Random => write!(f, "Random")?,
@@ -47,6 +47,7 @@ impl Default for MoveGenerator {
 }
 
 impl MoveGenerator {
+    #[must_use]
     pub fn new(search_order: SearchOrder) -> Self {
         MoveGenerator { search_order }
     }
@@ -81,7 +82,7 @@ impl MoveGenerator {
             }
 
             if generate_single_move {
-                next_moves.push(MoveSequence::Single(first_move))
+                next_moves.push(MoveSequence::Single(first_move));
             } else {
                 for second_move in search_order {
                     let second_position = position_after_move(first_position, second_move);
