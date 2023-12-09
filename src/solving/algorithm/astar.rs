@@ -1,5 +1,5 @@
 use std::cmp::{Ordering, Reverse};
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, VecDeque};
 use std::rc::Rc;
 
 use crate::board::{Board, BoardMove, OwnedBoard};
@@ -187,6 +187,208 @@ impl Solver for IterativeAStarSolver {
                 }
             }
         }
+    }
+}
+
+struct SMAStarNode {
+    board: OwnedBoard,
+    path: Vec<BoardMove>,
+    f_cost: u64,
+    best_forgotten_child: Option<u64>,
+}
+
+impl SMAStarNode {
+    #[must_use]
+    pub fn new(board: OwnedBoard, path: Vec<BoardMove>, heuristic: &dyn Heuristic) -> Self {
+        let f_cost = heuristic.evaluate(&board) + path.len() as u64;
+        Self {
+            board,
+            path,
+            f_cost,
+            best_forgotten_child: None,
+        }
+    }
+}
+
+impl PartialEq for SMAStarNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.board == other.board && self.path == other.path
+    }
+}
+
+impl Eq for SMAStarNode {}
+
+impl PartialOrd for SMAStarNode {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for SMAStarNode {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.f_cost.cmp(&other.f_cost) {
+            // if the f-costs are the same, the deeper node is better
+            Ordering::Equal => self.path.len().cmp(&other.path.len()).reverse(),
+            other => other,
+        }
+    }
+}
+
+// NOTE: May not work
+pub struct MemoryBoundedAStarSolver {
+    queue: VecDeque<SMAStarNode>,
+    heuristic: Rc<dyn Heuristic>,
+    move_generator: MoveGenerator,
+    memory_limit: Option<usize>,
+}
+
+impl MemoryBoundedAStarSolver {
+    #[must_use]
+    pub fn new(board: OwnedBoard, heuristic: Box<dyn Heuristic>) -> Self {
+        let mut queue = VecDeque::new();
+        let heuristic: Rc<dyn Heuristic> = Rc::from(heuristic);
+        if is_solvable(&board) {
+            queue.push_back(SMAStarNode::new(board, vec![], &*heuristic));
+        }
+
+        Self {
+            heuristic,
+            queue,
+            move_generator: MoveGenerator::default(),
+            memory_limit: None,
+        }
+    }
+
+    #[must_use]
+    pub fn with_memory_limit(
+        board: OwnedBoard,
+        heuristic: Box<dyn Heuristic>,
+        memory_limit: usize,
+    ) -> Self {
+        let mut queue = VecDeque::new();
+        let heuristic: Rc<dyn Heuristic> = Rc::from(heuristic);
+        if is_solvable(&board) {
+            queue.push_back(SMAStarNode::new(board, vec![], &*heuristic));
+        }
+
+        Self {
+            heuristic,
+            queue,
+            move_generator: MoveGenerator::default(),
+            memory_limit: Some(memory_limit),
+        }
+    }
+
+    fn children(&self, node: &SMAStarNode) -> impl IntoIterator<Item = SMAStarNode> {
+        let board = &node.board;
+        let path = &node.path;
+        let mut children = vec![];
+
+        for next_move in self
+            .move_generator
+            .generate_moves(board, path.last().copied())
+        {
+            let mut new_board = board.clone();
+            let mut new_path = path.clone();
+            util::apply_move_sequence(&mut new_board, &mut new_path, next_move);
+            children.push(SMAStarNode::new(new_board, new_path, &*self.heuristic));
+        }
+
+        children
+    }
+
+    fn enqueue(&mut self, node: SMAStarNode) {
+        // instead of linear search, we can do binary search, since we know that the queue is ordered
+        let insert_index = match self.queue.binary_search(&node) {
+            Ok(i) => i,
+            Err(i) => i,
+        };
+
+        self.queue.insert(insert_index, node);
+    }
+
+    fn reduce_memory(&mut self) {
+        let deleted = self
+            .queue
+            .pop_back()
+            .expect("If memory is full then queue should have nodes");
+
+        if let Some(parent) = self.find_parent(&deleted) {
+            parent.best_forgotten_child = Some(
+                parent
+                    .best_forgotten_child
+                    .map_or(deleted.f_cost, |x| u64::min(x, deleted.f_cost)),
+            )
+        }
+    }
+
+    fn find_parent(&mut self, node: &SMAStarNode) -> Option<&mut SMAStarNode> {
+        self.queue
+            .iter()
+            .enumerate()
+            .filter(|(_, n)| node.path.starts_with(&n.path))
+            .max_by(|(_, fst), (_, snd)| fst.path.len().cmp(&snd.path.len()))
+            .map(|(i, _)| i)
+            .and_then(|i| self.queue.get_mut(i))
+    }
+
+    fn visit_node(&mut self, mut node: SMAStarNode) -> Option<Vec<BoardMove>> {
+        if node.board.is_solved() {
+            return Some(node.path);
+        }
+
+        let next_child: Option<SMAStarNode> = self
+            .children(&node)
+            .into_iter()
+            .find(|c| !self.queue.contains(c));
+
+        if let Some(next_child) = next_child {
+            if self.is_memory_full() {
+                self.reduce_memory()
+            }
+            self.enqueue(next_child);
+
+            if self.is_memory_full() {
+                self.reduce_memory()
+            }
+            self.enqueue(node);
+        } else {
+            node.f_cost = self
+                .children(&node)
+                .into_iter()
+                .map(|c| {
+                    self.queue
+                        .iter()
+                        .find(|&m| *m == c)
+                        .expect("Children should be in memory")
+                })
+                .map(|c| c.f_cost)
+                .min()
+                .unwrap_or(node.f_cost);
+
+            if self.is_memory_full() {
+                self.reduce_memory()
+            }
+            self.enqueue(node)
+        }
+
+        None
+    }
+
+    fn is_memory_full(&self) -> bool {
+        self.memory_limit
+            .is_some_and(|limit| self.queue.len() >= limit)
+    }
+}
+
+impl Solver for MemoryBoundedAStarSolver {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
+        while let Some(node) = self.queue.pop_front() {
+            if let Some(result) = self.visit_node(node) {
+                return Ok(result);
+            }
+        }
+        Err(SolvingError::UnsolvableBoard)
     }
 }
 
