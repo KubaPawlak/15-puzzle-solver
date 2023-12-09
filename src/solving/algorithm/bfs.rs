@@ -17,7 +17,7 @@ impl BFSSolver {
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         let mut queue = VecDeque::new();
         if is_solvable(&board) {
-            queue.push_back((board.clone(), Vec::new()));
+            queue.push_back((board, Vec::new()));
         }
         Self {
             visited_positions: VisitedPositions::new(),
