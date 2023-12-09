@@ -29,4 +29,9 @@ impl<T: Board + Eq + Hash> VisitedPositions<T> {
         let mut lock = self.visited_states.write().expect("RwLock write lock");
         lock.insert(board);
     }
+
+    pub(crate) fn clear(&self) {
+        let mut lock = self.visited_states.write().expect("RwLock write lock");
+        lock.clear();
+    }
 }

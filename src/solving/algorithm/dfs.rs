@@ -1,12 +1,11 @@
-use std::collections::HashSet;
-
 use crate::board::{Board, BoardMove, OwnedBoard};
 use crate::solving::algorithm::Solver;
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
+use crate::solving::visited::VisitedPositions;
 
 pub struct DFSSolver {
-    visited: HashSet<OwnedBoard>,
+    visited_positions: VisitedPositions<OwnedBoard>,
     move_generator: MoveGenerator,
     current_path: Vec<BoardMove>,
     board: OwnedBoard,
@@ -16,7 +15,7 @@ impl DFSSolver {
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             board,
-            visited: HashSet::new(),
+            visited_positions: VisitedPositions::new(),
             move_generator,
             current_path: vec![],
         }
@@ -30,10 +29,10 @@ impl DFSSolver {
         if self.board.is_solved() {
             return Ok(());
         }
-        if self.visited.contains(&self.board) {
+        if self.visited_positions.is_visited(&self.board) {
             return Err(());
         }
-        self.visited.insert(self.board.clone());
+        self.visited_positions.mark_visited(self.board.clone());
 
         if let Some(max_depth) = max_depth {
             if current_depth >= max_depth {
@@ -158,12 +157,13 @@ impl Solver for IncrementalDFSSolver {
         {
             max_depth += 1;
             log::trace!("Increasing DFS depth to {max_depth}");
-            self.dfs_solver.visited.clear();
+            self.dfs_solver.visited_positions.clear();
         }
 
         Ok(self.dfs_solver.current_path)
     }
 }
+
 
 #[cfg(test)]
 mod test {
@@ -189,16 +189,16 @@ mod test {
             Parity::Odd
         );
 
-        let mut visited = HashSet::new();
+        let visited_positions = VisitedPositions::new();
         for m in [Up, Down, Left, Right] {
             board.exec_move(m);
-            visited.insert(board.clone());
+            visited_positions.mark_visited(board.clone());
             board.exec_move(m.opposite());
         }
 
         let mut solver = DFSSolver {
             board,
-            visited,
+            visited_positions: VisitedPositions::new(),
             move_generator: MoveGenerator::default(),
             current_path: vec![],
         };
