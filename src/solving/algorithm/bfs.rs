@@ -3,8 +3,8 @@ use std::collections::VecDeque;
 use crate::board::{Board, BoardMove, OwnedBoard};
 use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
-use crate::solving::visited::VisitedPositions;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
+use crate::solving::visited::VisitedPositions;
 
 pub struct BFSSolver {
     visited_positions: VisitedPositions<OwnedBoard>,
@@ -17,7 +17,7 @@ impl BFSSolver {
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         let mut queue = VecDeque::new();
         if is_solvable(&board) {
-            queue.push_back((board.clone(), Vec::new()))
+            queue.push_back((board.clone(), Vec::new()));
         }
         Self {
             visited_positions: VisitedPositions::new(),
