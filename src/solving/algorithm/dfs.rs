@@ -1,13 +1,13 @@
-use std::collections::HashSet;
+use crate::board::{Board, BoardMove, OwnedBoard};
 use std::fmt::{Display, Formatter};
 
-use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::{util, Solver, SolvingError};
+use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
-use crate::solving::movegen::MoveGenerator;
+use crate::solving::movegen::{MoveGenerator, MoveSequence};
+use crate::solving::visited::VisitedPositions;
 
 pub struct DFSSolver {
-    visited: HashSet<OwnedBoard>,
+    visited_positions: VisitedPositions<OwnedBoard>,
     move_generator: MoveGenerator,
     current_path: Vec<BoardMove>,
     board: OwnedBoard,
@@ -49,7 +49,7 @@ impl DFSSolver {
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             board,
-            visited: HashSet::new(),
+            visited_positions: VisitedPositions::new(),
             move_generator,
             current_path: vec![],
         }
@@ -63,10 +63,10 @@ impl DFSSolver {
         if self.board.is_solved() {
             return Ok(());
         }
-        if self.visited.contains(&self.board) {
+        if self.visited_positions.is_visited(&self.board) {
             return Err(DFSError::StateAlreadyVisited);
         }
-        self.visited.insert(self.board.clone());
+        self.visited_positions.mark_visited(self.board.clone());
 
         if let Some(max_depth) = max_depth {
             if current_depth >= max_depth {
@@ -78,11 +78,11 @@ impl DFSSolver {
             .move_generator
             .generate_moves(&self.board, self.current_path.last().copied())
         {
-            util::apply_move_sequence(&mut self.board, &mut self.current_path, next_move);
+            self.exec_move_sequence(&next_move);
             if self._call_recursive(current_depth + 1, max_depth).is_ok() {
                 return Ok(());
             }
-            util::undo_move_sequence(&mut self.board, &mut self.current_path, next_move);
+            self.undo_move_sequence(&next_move);
         }
 
         Err(DFSError::StateExhausted)
@@ -111,6 +111,36 @@ impl DFSSolver {
                 }
             }
             self.perform_iteration(current_depth + 1, max_depth)
+        }
+    }
+
+    fn exec_move_sequence(&mut self, move_sequence: &MoveSequence) {
+        match *move_sequence {
+            MoveSequence::Single(m) => {
+                self.board.exec_move(m);
+                self.current_path.push(m);
+            }
+            MoveSequence::Double(fst, snd) => {
+                self.board.exec_move(fst);
+                self.board.exec_move(snd);
+                self.current_path.push(fst);
+                self.current_path.push(snd);
+            }
+        }
+    }
+
+    fn undo_move_sequence(&mut self, move_sequence: &MoveSequence) {
+        match move_sequence {
+            MoveSequence::Single(m) => {
+                self.board.exec_move(m.opposite());
+                self.current_path.pop();
+            }
+            MoveSequence::Double(fst, snd) => {
+                self.board.exec_move(snd.opposite());
+                self.board.exec_move(fst.opposite());
+                self.current_path.pop();
+                self.current_path.pop();
+            }
         }
     }
 }
@@ -154,7 +184,7 @@ impl Solver for IncrementalDFSSolver {
         {
             max_depth += 1;
             log::trace!("Increasing DFS depth to {max_depth}");
-            self.dfs_solver.visited.clear();
+            self.dfs_solver.visited_positions.clear();
         }
 
         Ok(self.dfs_solver.current_path)
@@ -177,7 +207,7 @@ mod test {
 9  10 7  12
 13 14 11 15
 "#;
-        let mut board: OwnedBoard = board_str.parse().unwrap();
+        let board: OwnedBoard = board_str.parse().unwrap();
 
         // odd parity is required so that only 1 move ahead is considered
         assert_eq!(
@@ -185,19 +215,19 @@ mod test {
             Parity::Odd
         );
 
-        let mut visited = HashSet::new();
-        for m in [Up, Down, Left, Right] {
-            board.exec_move(m);
-            visited.insert(board.clone());
-            board.exec_move(m.opposite());
-        }
-
         let mut solver = DFSSolver {
             board,
-            visited,
+            visited_positions: VisitedPositions::new(),
             move_generator: MoveGenerator::default(),
             current_path: vec![],
         };
+
+        for m in [Up, Down, Left, Right] {
+            solver.board.exec_move(m);
+            solver.visited_positions.mark_visited(solver.board.clone());
+            solver.board.exec_move(m.opposite());
+        }
+
         // at this point visited contains all the possible board positions that can be reached from the current state
         // therefore, it is expected that `perform_iteration` will return Err
         let result = solver.perform_iteration(0, None);
