@@ -9,7 +9,7 @@ pub enum Parity {
 }
 
 impl Parity {
-    fn opposite(&self) -> Parity {
+    fn opposite(self) -> Parity {
         match self {
             Parity::Even => Parity::Odd,
             Parity::Odd => Parity::Even,

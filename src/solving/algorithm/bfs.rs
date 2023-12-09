@@ -1,10 +1,10 @@
-use std::collections::{VecDeque};
+use std::collections::VecDeque;
 
 use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::Solver;
+use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
-use crate::solving::visited::{VisitedPositions};
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
+use crate::solving::visited::VisitedPositions;
 
 pub struct BFSSolver {
     visited_positions: VisitedPositions<OwnedBoard>,
@@ -13,10 +13,11 @@ pub struct BFSSolver {
 }
 
 impl BFSSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         let mut queue = VecDeque::new();
         if is_solvable(&board) {
-            queue.push_back((board.clone(), vec![]))
+            queue.push_back((board, vec![]));
         }
         Self {
             visited_positions: VisitedPositions::new(),
@@ -75,12 +76,12 @@ impl BFSSolver {
 }
 
 impl Solver for BFSSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         while let Some((board, path)) = self.queue.pop_front() {
             if let Some(result) = self.bfs_iteration(&board, &path) {
                 return Ok(result);
             }
         }
-        Err(())
+        Err(SolvingError::UnsolvableBoard)
     }
 }

@@ -1,5 +1,7 @@
 use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::Solver;
+use std::fmt::{Display, Formatter};
+
+use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
 use crate::solving::visited::VisitedPositions;
@@ -11,7 +13,39 @@ pub struct DFSSolver {
     board: OwnedBoard,
 }
 
+#[derive(Debug)]
+enum DFSError {
+    /// Solver visits the state it has already visited before
+    StateAlreadyVisited,
+    /// Solver reached max depth of the search tree
+    MaxDepthReached,
+    /// All of the moves possible from this position yielded an error
+    StateExhausted,
+}
+
+impl Display for DFSError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DFSError::StateAlreadyVisited => write!(f, "Solver has already visited this state"),
+            DFSError::MaxDepthReached => write!(f, "Solver reached max depth of the search tree"),
+            DFSError::StateExhausted => write!(
+                f,
+                "None of the moves from this position results in a solution"
+            ),
+        }
+    }
+}
+
+impl std::error::Error for DFSError {}
+
+impl From<DFSError> for SolvingError {
+    fn from(value: DFSError) -> Self {
+        Self::AlgorithmError(Box::new(value))
+    }
+}
+
 impl DFSSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             board,
@@ -25,18 +59,18 @@ impl DFSSolver {
         &mut self,
         current_depth: usize,
         max_depth: Option<usize>,
-    ) -> Result<(), ()> {
+    ) -> Result<(), DFSError> {
         if self.board.is_solved() {
             return Ok(());
         }
         if self.visited_positions.is_visited(&self.board) {
-            return Err(());
+            return Err(DFSError::StateAlreadyVisited);
         }
         self.visited_positions.mark_visited(self.board.clone());
 
         if let Some(max_depth) = max_depth {
             if current_depth >= max_depth {
-                return Err(());
+                return Err(DFSError::MaxDepthReached);
             }
         }
 
@@ -51,25 +85,21 @@ impl DFSSolver {
             self.undo_move_sequence(&next_move);
         }
 
-        Err(())
+        Err(DFSError::StateExhausted)
     }
 
     fn _call_recursive(
         &mut self,
         current_depth: usize,
         max_depth: Option<usize>,
-    ) -> Result<(), ()> {
+    ) -> Result<(), DFSError> {
         const STACK_RED_ZONE: usize = 64 * 1024;
         #[cfg(feature = "stack-expansion")]
         {
             // If we have less than `STACK_RED_ZONE` stack remaining, we allocate 4MB for a new stack
-            if stacker::maybe_grow(STACK_RED_ZONE, 4 * 1024 * 1024, || {
+            stacker::maybe_grow(STACK_RED_ZONE, 4 * 1024 * 1024, || {
                 self.perform_iteration(current_depth + 1, max_depth)
             })
-            .is_ok()
-            {
-                return Ok(());
-            }
         }
         #[cfg(not(feature = "stack-expansion"))]
         {
@@ -77,14 +107,11 @@ impl DFSSolver {
                 // If we have less than `STACK_RED_ZONE` stack remaining, we must backtrack to avoid stack overflow
                 if remaining < STACK_RED_ZONE {
                     log::debug!("DFS reached stack limit at depth {current_depth}, backtracking");
-                    return Err(());
+                    return Err(DFSError::MaxDepthReached);
                 }
             }
-            if self.perform_iteration(current_depth + 1, max_depth).is_ok() {
-                return Ok(());
-            }
+            self.perform_iteration(current_depth + 1, max_depth)
         }
-        Err(())
     }
 
     fn exec_move_sequence(&mut self, move_sequence: &MoveSequence) {
@@ -119,13 +146,12 @@ impl DFSSolver {
 }
 
 impl Solver for DFSSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         if !is_solvable(&self.board) {
-            return Err(());
+            return Err(SolvingError::UnsolvableBoard);
         }
 
-        self.perform_iteration(0, None)
-            .expect("If board is solvable, DFS without depth limit should always find a solution");
+        self.perform_iteration(0, None)?;
 
         Ok(self.current_path)
     }
@@ -136,6 +162,7 @@ pub struct IncrementalDFSSolver {
 }
 
 impl IncrementalDFSSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             dfs_solver: DFSSolver::new(board, move_generator),
@@ -144,9 +171,9 @@ impl IncrementalDFSSolver {
 }
 
 impl Solver for IncrementalDFSSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         if !is_solvable(&self.dfs_solver.board) {
-            return Err(());
+            return Err(SolvingError::UnsolvableBoard);
         }
 
         let mut max_depth = 1;
@@ -163,7 +190,6 @@ impl Solver for IncrementalDFSSolver {
         Ok(self.dfs_solver.current_path)
     }
 }
-
 
 #[cfg(test)]
 mod test {

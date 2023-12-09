@@ -3,7 +3,7 @@ use std::collections::BinaryHeap;
 use std::rc::Rc;
 
 use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::Solver;
+use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
 
@@ -95,6 +95,7 @@ fn undo_move_sequence(
 }
 
 impl AStarSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, heuristic: Box<dyn Heuristic>) -> Self {
         let mut queue = BinaryHeap::new();
         let heuristic: Rc<dyn Heuristic> = Rc::from(heuristic);
@@ -103,7 +104,7 @@ impl AStarSolver {
                 board,
                 path: vec![],
                 heuristic: Rc::clone(&heuristic),
-            })
+            });
         }
 
         Self {
@@ -137,7 +138,7 @@ impl AStarSolver {
 }
 
 impl Solver for AStarSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         let mut max_f_cost = 0;
         while let Some(node) = self.queue.pop() {
             let f_cost = node.f_cost();
@@ -149,7 +150,7 @@ impl Solver for AStarSolver {
                 return Ok(result);
             }
         }
-        Err(())
+        Err(SolvingError::UnsolvableBoard)
     }
 }
 
@@ -167,6 +168,7 @@ enum IDAStarResult {
 }
 
 impl IterativeAStarSolver {
+    #[must_use]
     pub fn new(board: OwnedBoard, heuristic: Box<dyn Heuristic>) -> Self {
         Self {
             board,
@@ -201,16 +203,16 @@ impl IterativeAStarSolver {
                 }
                 (_, _) => {}
             }
-            undo_move_sequence(&mut self.board, &mut self.path, next_move)
+            undo_move_sequence(&mut self.board, &mut self.path, next_move);
         }
         minimum.map_or(IDAStarResult::NotFound, IDAStarResult::Exceeded)
     }
 }
 
 impl Solver for IterativeAStarSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, ()> {
+    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         if !is_solvable(&self.board) {
-            return Err(());
+            return Err(SolvingError::UnsolvableBoard);
         }
         let mut bound = self.heuristic.evaluate(&self.board);
         loop {

@@ -15,6 +15,7 @@ pub enum BoardMove {
 }
 
 impl BoardMove {
+    #[must_use]
     pub fn opposite(&self) -> Self {
         match self {
             BoardMove::Up => BoardMove::Down,
@@ -52,6 +53,6 @@ pub trait Board {
 
     /// # Panics
     /// This function may panic if the move cannot be performed.
-    /// To avoid it, check before if a move can be executed using [can_move](Board::can_move)
+    /// To avoid it, check before if a move can be executed using [`can_move`](Board::can_move)
     fn exec_move(&mut self, board_move: BoardMove);
 }

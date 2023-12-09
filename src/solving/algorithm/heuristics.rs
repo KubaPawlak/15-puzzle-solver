@@ -99,7 +99,7 @@ impl Heuristic for LinearConflict {
 }
 
 /// Implementation of heuristic developed by Ken'ichiro Takahashi
-/// Description of the heuristic can be found at https://computerpuzzle.net/puzzle/15puzzle/index.html
+/// Description of the heuristic can be found at <https://computerpuzzle.net/puzzle/15puzzle/index.html>
 #[derive(Default)]
 pub struct InversionDistance {
     cache: std::cell::RefCell<Option<InversionDistanceCache>>,
