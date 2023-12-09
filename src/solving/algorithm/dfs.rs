@@ -207,7 +207,7 @@ mod test {
 9  10 7  12
 13 14 11 15
 "#;
-        let mut board: OwnedBoard = board_str.parse().unwrap();
+        let board: OwnedBoard = board_str.parse().unwrap();
 
         // odd parity is required so that only 1 move ahead is considered
         assert_eq!(
@@ -215,19 +215,19 @@ mod test {
             Parity::Odd
         );
 
-        let visited_positions = VisitedPositions::new();
-        for m in [Up, Down, Left, Right] {
-            board.exec_move(m);
-            visited_positions.mark_visited(board.clone());
-            board.exec_move(m.opposite());
-        }
-
         let mut solver = DFSSolver {
             board,
             visited_positions: VisitedPositions::new(),
             move_generator: MoveGenerator::default(),
             current_path: vec![],
         };
+
+        for m in [Up, Down, Left, Right] {
+            solver.board.exec_move(m);
+            solver.visited_positions.mark_visited(solver.board.clone());
+            solver.board.exec_move(m.opposite());
+        }
+
         // at this point visited contains all the possible board positions that can be reached from the current state
         // therefore, it is expected that `perform_iteration` will return Err
         let result = solver.perform_iteration(0, None);

@@ -3,8 +3,8 @@ use std::collections::VecDeque;
 use crate::board::{Board, BoardMove, OwnedBoard};
 use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
-use crate::solving::movegen::{MoveGenerator, MoveSequence};
 use crate::solving::visited::VisitedPositions;
+use crate::solving::movegen::{MoveGenerator, MoveSequence};
 
 pub struct BFSSolver {
     visited_positions: VisitedPositions<OwnedBoard>,
@@ -17,7 +17,7 @@ impl BFSSolver {
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         let mut queue = VecDeque::new();
         if is_solvable(&board) {
-            queue.push_back((board, vec![]));
+            queue.push_back((board.clone(), Vec::new()))
         }
         Self {
             visited_positions: VisitedPositions::new(),
@@ -48,10 +48,10 @@ impl BFSSolver {
     fn bfs_iteration(
         &mut self,
         current_board: &OwnedBoard,
-        current_path: &Vec<BoardMove>,
+        current_path: &[BoardMove],
     ) -> Option<Vec<BoardMove>> {
         if current_board.is_solved() {
-            return Some(current_path.clone());
+            return Some(current_path.to_vec());
         }
 
         if self.visited_positions.is_visited(current_board) {
@@ -64,7 +64,7 @@ impl BFSSolver {
 
         for next_move in self.move_generator.generate_moves(current_board, None) {
             let mut new_board = current_board.clone();
-            let mut new_path = current_path.clone();
+            let mut new_path = current_path.to_vec();
             Self::apply_move_sequence(&mut new_board, &mut new_path, &next_move);
             new_elements.push((new_board, new_path));
         }
