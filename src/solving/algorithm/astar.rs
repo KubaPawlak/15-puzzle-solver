@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::cmp::{Ordering, Reverse};
 use std::collections::BinaryHeap;
 use std::rc::Rc;
 
@@ -41,7 +41,7 @@ impl PartialOrd for SearchNode {
 
 impl Ord for SearchNode {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.f_cost().cmp(&other.f_cost()).reverse() // reverse the ordering so that board with lower heuristic shows as greater
+        self.f_cost().cmp(&other.f_cost())
     }
 }
 
@@ -52,7 +52,7 @@ impl Ord for SearchNode {
 // As a consequence, it cannot implement search tree pruning in a simple way
 pub struct AStarSolver {
     heuristic: Rc<dyn Heuristic>,
-    queue: BinaryHeap<SearchNode>,
+    queue: BinaryHeap<Reverse<SearchNode>>,
     move_generator: MoveGenerator,
 }
 
@@ -62,11 +62,11 @@ impl AStarSolver {
         let mut queue = BinaryHeap::new();
         let heuristic: Rc<dyn Heuristic> = Rc::from(heuristic);
         if is_solvable(&board) {
-            queue.push(SearchNode {
+            queue.push(Reverse(SearchNode {
                 board,
                 path: vec![],
                 heuristic: Rc::clone(&heuristic),
-            });
+            }));
         }
 
         Self {
@@ -88,11 +88,11 @@ impl AStarSolver {
             let mut new_board = board.clone();
             let mut new_path = path.clone();
             util::apply_move_sequence(&mut new_board, &mut new_path, next_move);
-            self.queue.push(SearchNode {
+            self.queue.push(Reverse(SearchNode {
                 board: new_board,
                 path: new_path,
                 heuristic: Rc::clone(&self.heuristic),
-            });
+            }));
         }
 
         None
@@ -102,7 +102,7 @@ impl AStarSolver {
 impl Solver for AStarSolver {
     fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
         let mut max_f_cost = 0;
-        while let Some(node) = self.queue.pop() {
+        while let Some(Reverse(node)) = self.queue.pop() {
             let f_cost = node.f_cost();
             if f_cost > max_f_cost {
                 max_f_cost = f_cost;
