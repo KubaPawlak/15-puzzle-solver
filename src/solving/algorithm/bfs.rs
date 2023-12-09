@@ -1,9 +1,9 @@
 use std::collections::{HashSet, VecDeque};
 
 use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::{Solver, SolvingError};
+use crate::solving::algorithm::{util, Solver, SolvingError};
 use crate::solving::is_solvable;
-use crate::solving::movegen::{MoveGenerator, MoveSequence};
+use crate::solving::movegen::MoveGenerator;
 
 pub struct BFSSolver {
     visited: HashSet<OwnedBoard>,
@@ -22,25 +22,6 @@ impl BFSSolver {
             visited: HashSet::new(),
             move_generator,
             queue,
-        }
-    }
-
-    fn apply_move_sequence(
-        board: &mut OwnedBoard,
-        path: &mut Vec<BoardMove>,
-        move_sequence: &MoveSequence,
-    ) {
-        match *move_sequence {
-            MoveSequence::Single(m) => {
-                board.exec_move(m);
-                path.push(m);
-            }
-            MoveSequence::Double(fst, snd) => {
-                board.exec_move(fst);
-                board.exec_move(snd);
-                path.push(fst);
-                path.push(snd);
-            }
         }
     }
 
@@ -65,7 +46,7 @@ impl BFSSolver {
         for next_move in self.move_generator.generate_moves(&current_board, None) {
             let mut new_board = current_board.clone();
             let mut new_path = current_path.clone();
-            Self::apply_move_sequence(&mut new_board, &mut new_path, &next_move);
+            util::apply_move_sequence(&mut new_board, &mut new_path, next_move);
             self.queue.push_back((new_board, new_path));
         }
 

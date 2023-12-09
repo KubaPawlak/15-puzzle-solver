@@ -38,3 +38,46 @@ impl Error for SolvingError {}
 pub trait Solver {
     fn solve(self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError>;
 }
+
+mod util {
+    use crate::board::{Board, BoardMove};
+    use crate::solving::movegen::MoveSequence;
+
+    pub fn apply_move_sequence(
+        board: &mut impl Board,
+        path: &mut Vec<BoardMove>,
+        move_sequence: MoveSequence,
+    ) {
+        match move_sequence {
+            MoveSequence::Single(m) => {
+                board.exec_move(m);
+                path.push(m);
+            }
+            MoveSequence::Double(fst, snd) => {
+                board.exec_move(fst);
+                board.exec_move(snd);
+                path.push(fst);
+                path.push(snd);
+            }
+        }
+    }
+
+    pub fn undo_move_sequence(
+        board: &mut impl Board,
+        path: &mut Vec<BoardMove>,
+        move_sequence: MoveSequence,
+    ) {
+        match move_sequence {
+            MoveSequence::Single(m) => {
+                board.exec_move(m.opposite());
+                path.pop();
+            }
+            MoveSequence::Double(fst, snd) => {
+                board.exec_move(snd.opposite());
+                board.exec_move(fst.opposite());
+                path.pop();
+                path.pop();
+            }
+        }
+    }
+}
