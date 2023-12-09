@@ -60,16 +60,12 @@ impl BFSSolver {
 
         self.visited_positions.mark_visited(current_board.clone());
 
-        let mut new_elements = Vec::new();
-
         for next_move in self.move_generator.generate_moves(current_board, None) {
             let mut new_board = current_board.clone();
             let mut new_path = current_path.to_vec();
             Self::apply_move_sequence(&mut new_board, &mut new_path, &next_move);
-            new_elements.push((new_board, new_path));
+            self.queue.push_back((new_board, new_path));
         }
-
-        self.queue.extend(new_elements);
 
         None
     }
