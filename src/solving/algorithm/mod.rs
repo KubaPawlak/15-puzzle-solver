@@ -4,6 +4,7 @@ use std::fmt::{Display, Formatter};
 use crate::board::BoardMove;
 
 pub mod astar;
+mod bestfs;
 pub mod bfs;
 pub mod dfs;
 pub mod heuristics;

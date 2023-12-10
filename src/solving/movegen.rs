@@ -1,5 +1,5 @@
-use std::fmt::{Display, Formatter};
 use rand::prelude::SliceRandom;
+use std::fmt::{Display, Formatter};
 
 use crate::board::{Board, BoardMove};
 use crate::solving::parity;
@@ -66,7 +66,12 @@ impl MoveGenerator {
             SearchOrder::Provided(order) => order,
             SearchOrder::Random => {
                 let mut rng = rand::thread_rng();
-                let mut order = [BoardMove::Up, BoardMove::Down, BoardMove::Left, BoardMove::Right];
+                let mut order = [
+                    BoardMove::Up,
+                    BoardMove::Down,
+                    BoardMove::Left,
+                    BoardMove::Right,
+                ];
                 order.shuffle(&mut rng);
                 order
             }
