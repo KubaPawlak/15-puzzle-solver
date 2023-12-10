@@ -144,7 +144,7 @@ impl Solver for BestFSSolver {
         Err(SolvingError::UnsolvableBoard)
     }
 }
-
+// Not quite sure how this tests the algorithm itself
 #[test]
 fn board_with_lower_heuristic_gets_searched_first() {
     let simple_board: OwnedBoard = r#"4 4
