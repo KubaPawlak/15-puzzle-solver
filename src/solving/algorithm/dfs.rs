@@ -1,13 +1,13 @@
-use crate::board::{Board, BoardMove, OwnedBoard};
 use std::fmt::{Display, Formatter};
 
+use crate::board::{Board, BoardMove, OwnedBoard};
 use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
 use crate::solving::visited::VisitedPositions;
 
 pub struct DFSSolver {
-    visited_positions: VisitedPositions<OwnedBoard>,
+    visited_positions: Option<VisitedPositions<OwnedBoard>>,
     move_generator: MoveGenerator,
     current_path: Vec<BoardMove>,
     board: OwnedBoard,
@@ -49,7 +49,7 @@ impl DFSSolver {
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
             board,
-            visited_positions: VisitedPositions::new(),
+            visited_positions: Some(VisitedPositions::new()),
             move_generator,
             current_path: vec![],
         }
@@ -63,10 +63,13 @@ impl DFSSolver {
         if self.board.is_solved() {
             return Ok(());
         }
-        if self.visited_positions.is_visited(&self.board) {
-            return Err(DFSError::StateAlreadyVisited);
+
+        if let Some(visited_positions) = &self.visited_positions {
+            if visited_positions.is_visited(&self.board) {
+                return Err(DFSError::StateAlreadyVisited);
+            }
+            visited_positions.mark_visited(self.board.clone());
         }
-        self.visited_positions.mark_visited(self.board.clone());
 
         if let Some(max_depth) = max_depth {
             if current_depth >= max_depth {
@@ -165,7 +168,12 @@ impl IncrementalDFSSolver {
     #[must_use]
     pub fn new(board: OwnedBoard, move_generator: MoveGenerator) -> Self {
         Self {
-            dfs_solver: DFSSolver::new(board, move_generator),
+            dfs_solver: DFSSolver {
+                board,
+                move_generator,
+                current_path: vec![],
+                visited_positions: None, // re-visit checking is not wanted because we may visit the same state but with a shallower depth
+            },
         }
     }
 }
@@ -184,7 +192,6 @@ impl Solver for IncrementalDFSSolver {
         {
             max_depth += 1;
             log::trace!("Increasing DFS depth to {max_depth}");
-            self.dfs_solver.visited_positions.clear();
         }
 
         Ok(self.dfs_solver.current_path)
@@ -215,16 +222,15 @@ mod test {
             Parity::Odd
         );
 
-        let mut solver = DFSSolver {
-            board,
-            visited_positions: VisitedPositions::new(),
-            move_generator: MoveGenerator::default(),
-            current_path: vec![],
-        };
+        let mut solver = DFSSolver::new(board, MoveGenerator::default());
 
         for m in [Up, Down, Left, Right] {
             solver.board.exec_move(m);
-            solver.visited_positions.mark_visited(solver.board.clone());
+            solver
+                .visited_positions
+                .as_ref()
+                .expect("DFS Solver should have re-visits checking")
+                .mark_visited(solver.board.clone());
             solver.board.exec_move(m.opposite());
         }
 
