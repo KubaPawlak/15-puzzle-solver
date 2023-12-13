@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
-use solver::solving::algorithm::heuristics::{
+use solver::solving::algorithm::heuristic::heuristics::{
     InversionDistance, LinearConflict, ManhattanDistance,
 };
 use solver::solving::algorithm::{solvers::*, Solver};
