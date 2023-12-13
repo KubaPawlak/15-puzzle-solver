@@ -17,7 +17,7 @@ trait HeuristicSearchNode: Ord + Eq {
     fn with_path(board: OwnedBoard, path: Vec<BoardMove>, heuristic: Rc<dyn Heuristic>) -> Self;
 
     fn cost(&self) -> u64;
-    fn desctructure(self) -> (OwnedBoard, Vec<BoardMove>);
+    fn destructure(self) -> (OwnedBoard, Vec<BoardMove>);
 }
 
 struct HeuristicSolver<Node>
@@ -49,7 +49,7 @@ where
     }
 
     fn visit_node(&mut self, node: Node) -> Option<Vec<BoardMove>> {
-        let (board, path) = node.desctructure();
+        let (board, path) = node.destructure();
 
         if board.is_solved() {
             return Some(path);

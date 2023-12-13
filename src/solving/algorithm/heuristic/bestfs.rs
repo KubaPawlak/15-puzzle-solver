@@ -1,12 +1,10 @@
 use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 use std::rc::Rc;
 
-use crate::board::{Board, BoardMove, OwnedBoard};
+use crate::board::{BoardMove, OwnedBoard};
 use crate::solving::algorithm::heuristic::heuristics::Heuristic;
-use crate::solving::algorithm::{util, Solver, SolvingError};
-use crate::solving::is_solvable;
-use crate::solving::movegen::{MoveGenerator, MoveSequence};
+use crate::solving::algorithm::heuristic::{HeuristicSearchNode, HeuristicSolver};
+use crate::solving::algorithm::{Solver, SolvingError};
 
 pub struct SearchNode {
     board: OwnedBoard,
@@ -36,80 +34,64 @@ impl PartialOrd for SearchNode {
 
 impl Ord for SearchNode {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.h_cost().cmp(&other.h_cost()).reverse() // reverse the ordering so that board with lower heuristic shows as greater
+        self.h_cost().cmp(&other.h_cost())
+    }
+}
+
+impl HeuristicSearchNode for SearchNode {
+    fn create(board: OwnedBoard, heuristic: Rc<dyn Heuristic>) -> Self {
+        Self {
+            board,
+            path: vec![],
+            heuristic,
+        }
+    }
+
+    fn with_path(board: OwnedBoard, path: Vec<BoardMove>, heuristic: Rc<dyn Heuristic>) -> Self {
+        Self {
+            board,
+            path,
+            heuristic,
+        }
+    }
+
+    fn cost(&self) -> u64 {
+        self.h_cost()
+    }
+
+    fn destructure(self) -> (OwnedBoard, Vec<BoardMove>) {
+        let Self { board, path, .. } = self;
+        (board, path)
     }
 }
 
 pub struct BestFSSolver {
-    heuristic: Rc<dyn Heuristic>,
-    queue: BinaryHeap<SearchNode>,
-    move_generator: MoveGenerator,
+    solver: HeuristicSolver<SearchNode>,
 }
 
 impl BestFSSolver {
-    #[must_use]
     pub fn new(board: OwnedBoard, heuristic: Box<dyn Heuristic>) -> Self {
-        let mut queue = BinaryHeap::new();
-        let heuristic: Rc<dyn Heuristic> = Rc::from(heuristic);
-        if is_solvable(&board) {
-            queue.push(SearchNode {
-                board,
-                path: vec![],
-                heuristic: Rc::clone(&heuristic),
-            });
-        }
-
         Self {
-            heuristic,
-            queue,
-            move_generator: MoveGenerator::default(),
+            solver: HeuristicSolver::new(board, heuristic),
         }
-    }
-
-    fn visit_node(&mut self, SearchNode { board, path, .. }: SearchNode) -> Option<Vec<BoardMove>> {
-        if board.is_solved() {
-            return Some(path);
-        }
-
-        for next_move in self
-            .move_generator
-            .generate_moves(&board, path.last().copied())
-        {
-            let mut new_board = board.clone();
-            let mut new_path = path.clone();
-            util::apply_move_sequence(&mut new_board, &mut new_path, next_move);
-            self.queue.push(SearchNode {
-                board: new_board,
-                path: new_path,
-                heuristic: Rc::clone(&self.heuristic),
-            });
-        }
-
-        None
     }
 }
 
 impl Solver for BestFSSolver {
-    fn solve(mut self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
-        let mut max_h_cost = 0;
-        while let Some(node) = self.queue.pop() {
-            let h_cost = node.h_cost();
-            if h_cost > max_h_cost {
-                max_h_cost = h_cost;
-                log::trace!("Evaluating position with h-cost {}", h_cost);
-            }
-            if let Some(result) = self.visit_node(node) {
-                return Ok(result);
-            }
-        }
-        Err(SolvingError::UnsolvableBoard)
+    fn solve(self: Box<Self>) -> Result<Vec<BoardMove>, SolvingError> {
+        Box::new(self.solver).solve()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::cmp::Reverse;
+    use std::collections::BinaryHeap;
+
+    use crate::board::Board;
     use crate::solving::algorithm::heuristic::heuristics;
+
+    use super::*;
 
     #[test]
     fn board_with_lower_heuristic_gets_searched_first() {
@@ -125,24 +107,24 @@ mod tests {
 
         let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
         let mut heap = BinaryHeap::new();
-        heap.push(SearchNode {
+        heap.push(Reverse(SearchNode {
             board: simple_board.clone(),
             path: vec![],
             heuristic: Rc::clone(&heuristic),
-        });
-        heap.push(SearchNode {
+        }));
+        heap.push(Reverse(SearchNode {
             board: worse_board.clone(),
             path: vec![],
             heuristic: Rc::clone(&heuristic),
-        });
+        }));
 
         assert_eq!(
             simple_board,
-            heap.pop().expect("Heap should not be empty").board
+            heap.pop().expect("Heap should not be empty").0.board
         );
         assert_eq!(
             worse_board,
-            heap.pop().expect("Heap should not be empty").board
+            heap.pop().expect("Heap should not be empty").0.board
         );
     }
 }
