@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 
-use solver::solving::algorithm::heuristics::ManhattanDistance;
+use solver::solving::algorithm::heuristic::heuristics::ManhattanDistance;
 use solver::solving::algorithm::{solvers::*, Solver};
 use solver::solving::movegen::MoveGenerator;
 

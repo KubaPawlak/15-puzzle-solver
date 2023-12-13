@@ -1,9 +1,9 @@
+use crate::board::{Board, BoardMove, OwnedBoard};
 use std::fmt::{Display, Formatter};
 
-use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::{Solver, SolvingError};
+use crate::solving::algorithm::{util, Solver, SolvingError};
 use crate::solving::is_solvable;
-use crate::solving::movegen::{MoveGenerator, MoveSequence};
+use crate::solving::movegen::MoveGenerator;
 use crate::solving::visited::VisitedPositions;
 
 pub struct DFSSolver {
@@ -81,11 +81,11 @@ impl DFSSolver {
             .move_generator
             .generate_moves(&self.board, self.current_path.last().copied())
         {
-            self.exec_move_sequence(&next_move);
+            util::apply_move_sequence(&mut self.board, &mut self.current_path, next_move);
             if self._call_recursive(current_depth + 1, max_depth).is_ok() {
                 return Ok(());
             }
-            self.undo_move_sequence(&next_move);
+            util::undo_move_sequence(&mut self.board, &mut self.current_path, next_move);
         }
 
         Err(DFSError::StateExhausted)
@@ -114,36 +114,6 @@ impl DFSSolver {
                 }
             }
             self.perform_iteration(current_depth + 1, max_depth)
-        }
-    }
-
-    fn exec_move_sequence(&mut self, move_sequence: &MoveSequence) {
-        match *move_sequence {
-            MoveSequence::Single(m) => {
-                self.board.exec_move(m);
-                self.current_path.push(m);
-            }
-            MoveSequence::Double(fst, snd) => {
-                self.board.exec_move(fst);
-                self.board.exec_move(snd);
-                self.current_path.push(fst);
-                self.current_path.push(snd);
-            }
-        }
-    }
-
-    fn undo_move_sequence(&mut self, move_sequence: &MoveSequence) {
-        match move_sequence {
-            MoveSequence::Single(m) => {
-                self.board.exec_move(m.opposite());
-                self.current_path.pop();
-            }
-            MoveSequence::Double(fst, snd) => {
-                self.board.exec_move(snd.opposite());
-                self.board.exec_move(fst.opposite());
-                self.current_path.pop();
-                self.current_path.pop();
-            }
         }
     }
 }

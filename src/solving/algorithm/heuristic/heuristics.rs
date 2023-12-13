@@ -1,6 +1,5 @@
-use std::cmp::{max, min};
-
 use crate::board::Board;
+use std::cmp::{max, min};
 
 pub trait Heuristic {
     /// Calculates the heuristic for a given board setting.
@@ -223,12 +222,13 @@ impl Heuristic for InversionDistance {
 
 #[cfg(test)]
 mod tests {
-    use crate::board::OwnedBoard;
+    use crate::board::{Board, OwnedBoard};
     use crate::solving::algorithm::dfs::IncrementalDFSSolver;
+    use crate::solving::algorithm::heuristic::heuristics::{
+        Heuristic, InversionDistance, LinearConflict, ManhattanDistance,
+    };
     use crate::solving::algorithm::Solver;
     use crate::solving::movegen::MoveGenerator;
-
-    use super::*;
 
     fn create_board() -> OwnedBoard {
         let board_str = r#"4 4
