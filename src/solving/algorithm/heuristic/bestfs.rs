@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use crate::board::{Board, BoardMove, OwnedBoard};
 use crate::solving::algorithm::heuristic::heuristics::Heuristic;
-use crate::solving::algorithm::{Solver, SolvingError};
+use crate::solving::algorithm::{util, Solver, SolvingError};
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
 
@@ -77,7 +77,7 @@ impl BestFSSolver {
         {
             let mut new_board = board.clone();
             let mut new_path = path.clone();
-            apply_move_sequence(&mut new_board, &mut new_path, next_move);
+            util::apply_move_sequence(&mut new_board, &mut new_path, next_move);
             self.queue.push(SearchNode {
                 board: new_board,
                 path: new_path,
@@ -103,25 +103,6 @@ impl Solver for BestFSSolver {
             }
         }
         Err(SolvingError::UnsolvableBoard)
-    }
-}
-
-fn apply_move_sequence(
-    board: &mut impl Board,
-    path: &mut Vec<BoardMove>,
-    move_sequence: MoveSequence,
-) {
-    match move_sequence {
-        MoveSequence::Single(m) => {
-            board.exec_move(m);
-            path.push(m);
-        }
-        MoveSequence::Double(fst, snd) => {
-            board.exec_move(fst);
-            board.exec_move(snd);
-            path.push(fst);
-            path.push(snd);
-        }
     }
 }
 
