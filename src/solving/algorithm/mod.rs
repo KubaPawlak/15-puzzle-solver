@@ -3,18 +3,17 @@ use std::fmt::{Display, Formatter};
 
 use crate::board::BoardMove;
 
-pub mod astar;
-mod bestfs;
 pub mod bfs;
 pub mod dfs;
-pub mod heuristics;
+
+pub mod heuristic;
 
 pub mod solvers {
-    pub use super::astar::AStarSolver;
-    pub use super::astar::IterativeAStarSolver;
     pub use super::bfs::BFSSolver;
     pub use super::dfs::DFSSolver;
     pub use super::dfs::IncrementalDFSSolver;
+    pub use crate::solving::algorithm::heuristic::astar::AStarSolver;
+    pub use crate::solving::algorithm::heuristic::astar::IterativeAStarSolver;
 }
 
 #[derive(Debug)]

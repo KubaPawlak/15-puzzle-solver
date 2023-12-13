@@ -3,13 +3,12 @@ use std::collections::BinaryHeap;
 use std::rc::Rc;
 
 use crate::board::{Board, BoardMove, OwnedBoard};
-use crate::solving::algorithm::{heuristics, Solver, SolvingError};
+use crate::solving::algorithm::heuristic::heuristics::Heuristic;
+use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
 
-use super::heuristics::Heuristic;
-
-struct SearchNode {
+pub struct SearchNode {
     board: OwnedBoard,
     path: Vec<BoardMove>,
     heuristic: Rc<dyn Heuristic>,
@@ -45,44 +44,6 @@ pub struct BestFSSolver {
     heuristic: Rc<dyn Heuristic>,
     queue: BinaryHeap<SearchNode>,
     move_generator: MoveGenerator,
-}
-
-fn apply_move_sequence(
-    board: &mut impl Board,
-    path: &mut Vec<BoardMove>,
-    move_sequence: MoveSequence,
-) {
-    match move_sequence {
-        MoveSequence::Single(m) => {
-            board.exec_move(m);
-            path.push(m);
-        }
-        MoveSequence::Double(fst, snd) => {
-            board.exec_move(fst);
-            board.exec_move(snd);
-            path.push(fst);
-            path.push(snd);
-        }
-    }
-}
-
-fn undo_move_sequence(
-    board: &mut impl Board,
-    path: &mut Vec<BoardMove>,
-    move_sequence: MoveSequence,
-) {
-    match move_sequence {
-        MoveSequence::Single(m) => {
-            board.exec_move(m.opposite());
-            path.pop();
-        }
-        MoveSequence::Double(fst, snd) => {
-            board.exec_move(snd.opposite());
-            board.exec_move(fst.opposite());
-            path.pop();
-            path.pop();
-        }
-    }
 }
 
 impl BestFSSolver {
@@ -144,38 +105,82 @@ impl Solver for BestFSSolver {
         Err(SolvingError::UnsolvableBoard)
     }
 }
-// Not quite sure how this tests the algorithm itself
-#[test]
-fn board_with_lower_heuristic_gets_searched_first() {
-    let simple_board: OwnedBoard = r#"4 4
+
+fn apply_move_sequence(
+    board: &mut impl Board,
+    path: &mut Vec<BoardMove>,
+    move_sequence: MoveSequence,
+) {
+    match move_sequence {
+        MoveSequence::Single(m) => {
+            board.exec_move(m);
+            path.push(m);
+        }
+        MoveSequence::Double(fst, snd) => {
+            board.exec_move(fst);
+            board.exec_move(snd);
+            path.push(fst);
+            path.push(snd);
+        }
+    }
+}
+
+fn undo_move_sequence(
+    board: &mut impl Board,
+    path: &mut Vec<BoardMove>,
+    move_sequence: MoveSequence,
+) {
+    match move_sequence {
+        MoveSequence::Single(m) => {
+            board.exec_move(m.opposite());
+            path.pop();
+        }
+        MoveSequence::Double(fst, snd) => {
+            board.exec_move(snd.opposite());
+            board.exec_move(fst.opposite());
+            path.pop();
+            path.pop();
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::solving::algorithm::heuristic::heuristics;
+
+    #[test]
+    fn board_with_lower_heuristic_gets_searched_first() {
+        let simple_board: OwnedBoard = r#"4 4
 1 2 3 4
 5 6 7 8
 9 10 11 12
 13 14 0 15"#
-        .parse()
-        .unwrap();
-    let mut worse_board = simple_board.clone();
-    worse_board.exec_move(BoardMove::Up);
+            .parse()
+            .unwrap();
+        let mut worse_board = simple_board.clone();
+        worse_board.exec_move(BoardMove::Up);
 
-    let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
-    let mut heap = BinaryHeap::new();
-    heap.push(SearchNode {
-        board: simple_board.clone(),
-        path: vec![],
-        heuristic: Rc::clone(&heuristic),
-    });
-    heap.push(SearchNode {
-        board: worse_board.clone(),
-        path: vec![],
-        heuristic: Rc::clone(&heuristic),
-    });
+        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
+        let mut heap = BinaryHeap::new();
+        heap.push(SearchNode {
+            board: simple_board.clone(),
+            path: vec![],
+            heuristic: Rc::clone(&heuristic),
+        });
+        heap.push(SearchNode {
+            board: worse_board.clone(),
+            path: vec![],
+            heuristic: Rc::clone(&heuristic),
+        });
 
-    assert_eq!(
-        simple_board,
-        heap.pop().expect("Heap should not be empty").board
-    );
-    assert_eq!(
-        worse_board,
-        heap.pop().expect("Heap should not be empty").board
-    );
+        assert_eq!(
+            simple_board,
+            heap.pop().expect("Heap should not be empty").board
+        );
+        assert_eq!(
+            worse_board,
+            heap.pop().expect("Heap should not be empty").board
+        );
+    }
 }

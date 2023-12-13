@@ -2,7 +2,9 @@ use clap::Parser;
 use log::LevelFilter;
 
 use solver::board::{BoardMove, OwnedBoard};
-use solver::solving::algorithm::heuristics::{self, Heuristic};
+use solver::solving::algorithm::heuristic::heuristics::{
+    Heuristic, InversionDistance, LinearConflict, ManhattanDistance,
+};
 use solver::solving::algorithm::{Solver, SolvingError};
 use solver::solving::movegen::SearchOrder;
 
@@ -44,7 +46,6 @@ fn validate_heuristic(heuristic_id: &str) -> Result<String, String> {
 }
 
 fn parse_heuristic(heuristic_id: &str) -> Result<Box<dyn Heuristic>, String> {
-    use heuristics::{InversionDistance, LinearConflict, ManhattanDistance};
     match heuristic_id {
         "MD" | "manhattan_distance" => Ok(Box::<ManhattanDistance>::default()),
         "LC" | "linear_conflict" => Ok(Box::<LinearConflict>::default()),

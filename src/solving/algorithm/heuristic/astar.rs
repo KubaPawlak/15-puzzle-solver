@@ -1,13 +1,11 @@
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
-use std::rc::Rc;
-
 use crate::board::{Board, BoardMove, OwnedBoard};
+use crate::solving::algorithm::heuristic::heuristics::Heuristic;
 use crate::solving::algorithm::{Solver, SolvingError};
 use crate::solving::is_solvable;
 use crate::solving::movegen::{MoveGenerator, MoveSequence};
-
-use super::heuristics::Heuristic;
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
+use std::rc::Rc;
 
 struct SearchNode {
     board: OwnedBoard,
@@ -230,9 +228,9 @@ impl Solver for IterativeAStarSolver {
 
 #[cfg(test)]
 mod tests {
-    use crate::solving::algorithm::heuristics;
-
     use super::*;
+    use crate::solving::algorithm::heuristic;
+    use crate::solving::algorithm::heuristic::astar::SearchNode;
 
     #[test]
     fn board_with_lower_heuristic_gets_searched_first() {
@@ -246,7 +244,7 @@ mod tests {
         let mut worse_board = simple_board.clone();
         worse_board.exec_move(BoardMove::Up);
 
-        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
+        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristic::heuristics::ManhattanDistance);
         let mut heap = BinaryHeap::new();
         heap.push(SearchNode {
             board: simple_board.clone(),
@@ -279,7 +277,7 @@ mod tests {
             .parse()
             .unwrap();
 
-        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristics::ManhattanDistance);
+        let heuristic: Rc<dyn Heuristic> = Rc::new(heuristic::heuristics::ManhattanDistance);
         let mut heap = BinaryHeap::new();
         heap.push(SearchNode {
             board: board.clone(),
