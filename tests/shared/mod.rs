@@ -16,27 +16,73 @@ fn solution_to_string(solution: &[BoardMove]) -> String {
 
 const TEST_DATA: &[(&str, usize)] = &[
     (
-        r#"3 3
-1 2 3
-0 4 6
-7 5 8
-"#,
+        r"3 3
+        1 2 3
+        0 4 6
+        7 5 8
+        ",
         3,
     ),
     (
+        r"3 3
+        1 2 3
+        4 5 6
+        7 0 8
+        ",
+        1,
+    ),
+    (
+        r"3 3
+        1 2 3
+        4 0 5
+        7 8 6
+        ",
+        2,
+    ),
+    (
+        r"3 3
+        4 1 3
+        0 2 5
+        7 8 6
+        ",
+        5,
+    ),
+    (
+        r"3 3
+        4 1 3
+        7 2 5
+        8 0 6",
+        7,
+    ),
+    (
+        r"3 3
+        0 4 2
+        1 7 3
+        5 8 6
+        ",
+        12,
+    ),
+    (
         r"3 4
-1  2  3  4
-5  6  7  8
-9 10  0 11
-",
+        1  2  3  4
+        5  6  7  8
+        9 10  0 11
+        ",
         1,
     ),
 ];
 
 fn generate_test_data() -> Vec<(OwnedBoard, usize)> {
+    #[allow(clippy::panic)]
     TEST_DATA
         .iter()
-        .map(|(brd, len)| (brd.parse().unwrap(), *len))
+        .map(|(brd, len)| {
+            (
+                brd.parse()
+                    .unwrap_or_else(|e| panic!("Board error {e:?} on board: {brd}")),
+                *len,
+            )
+        })
         .collect()
 }
 
