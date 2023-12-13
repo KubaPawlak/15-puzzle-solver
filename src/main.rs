@@ -87,9 +87,6 @@ struct AlgorithmArgs {
 
     #[arg(long, value_name = "HEURISTIC_ID", value_parser = crate::validate_heuristic, help = "A* search algorithm")]
     ida: Option<String>,
-
-    #[arg(short, long, value_name = "HEURISTIC_ID", value_parser = crate::validate_heuristic, help = "Simplified Memory-bounded A*")]
-    sma: Option<String>,
 }
 
 fn create_solver(config: AlgorithmArgs, board: OwnedBoard) -> Box<dyn Solver> {
@@ -110,10 +107,6 @@ fn create_solver(config: AlgorithmArgs, board: OwnedBoard) -> Box<dyn Solver> {
         let heuristic = parse_heuristic(heuristic_id)
             .expect("Parser should fail if heuristic id was incorrect");
         Box::new(AStarSolver::new(board, heuristic))
-    } else if let Some(heuristic_id) = &config.sma {
-        let _heuristic = parse_heuristic(heuristic_id)
-            .expect("Parser should fail if heuristic id was incorrect");
-        todo!("SMA* is not implemented yet")
     } else if let Some(heuristic_id) = &config.ida {
         let heuristic = parse_heuristic(heuristic_id)
             .expect("Parser should fail if heuristic id was incorrect");
